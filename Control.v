@@ -1,13 +1,13 @@
 // TODO is there a signal we want when aluop isn't in use?
 
-module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch, regused);
+module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch);
     input [3:0] opcode;
-    output regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch;
-    output [3:0] aluop
+    output regwrite, alusrc, memread, memwrite, memtoreg, branch;
+    output [3:0] aluop;
 
     // RegWrite, determines if D is written to reg
     // 1 = write to reg, 0 = do no write to reg
-    assign regwrite = opcode[3] | (opcode == 4'b1000) | (opcode[3:1] == 3'b101) | (opcode == 4'b1110);
+    assign regwrite = ~opcode[3] | (opcode == 4'b1000) | (opcode[3:1] == 3'b101) | (opcode == 4'b1110);
 
     // compute: 0aaa
     // lw: 1000
@@ -39,7 +39,7 @@ module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, bra
     // AlUop, determines what operation to pass out the ALU
     // 0 = add, 1 = sub, 2 = xor, 3 = red, 4 = sll, 5 = sra, 6 = ror, 7 = paddsb
     // 8 = llb, 9 = lhb, x = if opcode is neither
-    assign aluop = (opcode == 4'b0000) ? 4'b0000 :
+    assign aluop = (opcode == 4'b0000 | opcode == 4'b1000 | opcode == 4'b1001) ? 4'b0000 :
                    (opcode == 4'b0001) ? 4'b0001 :
                    (opcode == 4'b0010) ? 4'b0010 :
                    (opcode == 4'b0011) ? 4'b0011 :
@@ -52,14 +52,13 @@ module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, bra
 
     // MemtoReg, determines if output from mem or alu is sent to reg
     // 1 = mem is sent to reg, 0 = alu output is sent to reg
-    assign memtoreg = opcode == 4'b1001;
+    assign memtoreg = opcode == 4'b1000;
 
     // SW (1001)
 
     // Branch, determines what to put into PC 
     // 0 = PC + 2, 1 = (PC + 2) + imm, 2 = rs, 3 = x (halt)
-    assign branch = (opcode == 4'b1100) ? 2'b0 :
-                    (opcode == 4'b1101) ? 2'b01 :
-                    (opcode == 4'b1110) ? 2'b10 :
-                    (opcode == 4'b1111) ? 2'b11 : 2'bxx;
+    assign branch = (opcode == 4'b1100) ? 2'b01 :
+                    (opcode == 4'b1101) ? 2'b10 :
+                    (opcode == 4'b1111) ? 2'b11 : 2'b0;
 endmodule

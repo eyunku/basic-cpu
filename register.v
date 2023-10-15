@@ -106,3 +106,13 @@ Register rf (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable
 Register rg (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[15]), .ReadEnable2(w_ren2[15]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 
 endmodule
+
+
+module decode_instruction();
+
+  // access register file for registers
+
+  // output the srcdata1 and 2
+
+endmodule
+  

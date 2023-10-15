@@ -1,3 +1,5 @@
+'include "memory.v"
+
 // cpu.v
 // this module is the main all encompassing module, this module will:
 // invoke the fetch instruction
@@ -7,8 +9,9 @@
 // 
 
 module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
-  // if the pc is x0 we need to set flag bits to 0
-  
+  // initialize instruction memory
+  wire curr_instr;
+  memory1c instr (.data_out(curr_instr), .data_in(x), .addr(pc_curr), .enable, .wr(), .clk(clk), .rst(rstn));
   // wire for instruction halfword
   // invoke fetch
 

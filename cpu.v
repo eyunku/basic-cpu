@@ -1,4 +1,7 @@
 'include "memory.v"
+'include "register.v"
+'include "alu.v"
+'include "pc_control.v"
 
 // cpu.v
 // this module is the main all encompassing module, this module will:
@@ -10,11 +13,12 @@
 
 module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // initialize instruction memory
-  wire curr_instr;
-  memory1c instr (.data_out(curr_instr), .data_in(x), .addr(pc_curr), .enable, .wr(), .clk(clk), .rst(rstn));
   // wire for instruction halfword
+  wire curr_instr;
   // invoke fetch
+  memory1c instr (.data_out(curr_instr), .data_in(x), .addr(pc_curr), .enable, .wr(), .clk(clk), .rst(rstn));
 
+  register register_file
   // wire for register 1 and 2 output, and opcode
   // wire instruction to decode
   // invoking decode, which will wire to the register file
@@ -22,7 +26,7 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // wire opcode to control unit
   // wire control unit outputs to many locations, like ALU, Mem, and writeback mux
 
-  // branching is done here, wire in control unit, flag bits, 
+  // branching is done here, wire in control unit, flag bits and make sure to sll imediate by 1
   
   // control ALU mux for rs or imm value
   // wire registers to ALU 

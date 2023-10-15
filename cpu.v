@@ -13,12 +13,20 @@
 
 module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // initialize instruction memory how????
-  
+
+  wire [15:0] curr_pc;
+  assign curr_pc = rst_n ? 16'b0 : curr_pc;
   // wire for instruction halfword
+  wire [15:0] instrget;
   wire [15:0] curr_instr;
   // FETCH INSTRUCTION
-  memory1c instr_mem (.data_out(curr_instr), .data_in(), .addr(pc_curr), .enable, .wr(), .clk(clk), .rst(rstn));
+  memory1c instr_mem (.data_out(instrget), .data_in(), .addr(pc_curr), .enable(0), .wr(0), .clk(clk), .rst(rstn));
+  assign curr_instr = rst_n ? 16'b0 : instrget;
+  // END OF FETCH INSTRUCTION
   
+  // CONTROL UNIT
+  control control_unit (.opcode(curr_instr[15:12]), .regwrite(regwrite), .alusrc(alusrc), .memread(memread), .memwrite(memwrite),
+                        .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .alusext(alusext));
   // control wires
   wire regwrite;
   wire alusrc;
@@ -27,40 +35,65 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   wire [3:0] aluop;
   wire memtoreg;
   wire [1:0] branch;
-  wire regused;
-  
-  // CONTROL UNIT
-  control control_unit (.opcode(curr_instr[15:12]), .regwrite(regwrite), .alusrc(alusrc), .memread(memread), .memwrite(memwrite),
-                        .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .regused(regused));
+  wire alusext;
+  // END OF CONTROL UNIT
 
   // REGISTER FILE
-  // we need to handle invalid read registers
-  // also which registers do we know to use? does it work out?
-  // we need the 0 register
-  RegisterFile register_file (.clk(clk), .rst(rstn), .SrcReg1(), .SrcReg2(), .DstReg(), .WriteReg(), .DstData(), .SrcData1(), .SrcData2());
+  // handle invalid read registers set to z
+  // pls implement the 0 register
+  RegisterFile register_file (.clk(clk), .rst(rstn), .SrcReg1(src1_register), .SrcReg2(src2_register), .DstReg(curr_instr[15:12]),
+                              .WriteReg(writereg), .DstData(dstdata), .SrcData1(srcdata1), .SrcData2(srcdata2));
+  // logic for mem-write signal (store word will have different registers)
+  wire [3:0] src2_register;
+  wire [3:0] src1_register;
+  assign src1_register = sext ? curr_instr[11:8] : curr_instr[7:4];          // LLB and LHB case requires src1 to be the read and write
+  assign src2_register = memwrite ? curr_instr[11:8] : curr_instr[3:0];      // only store word case
+  wire writereg;                                      // for any kind of write command
+  assign writereg = regwrite | memwrite | memtoreg;
+  wire [15:0] dstdata;                                // destination data will be wired later
+  wire [15:0] srcdata1, srcdata2;                     // outputs of the read instruction
+  // END OF REGISTER FILE
+  
+  // PC CONTROL
+  // is done here, wire in control unit, flag bits and make sure to sll imediate by 1
+  pc_control pc_controller (.bsig(branch), .C(curr_instr[11:9]), .I(curr_instr[8:0]), .F(flag_bits), .regsrc(curr_instr[7:4]),
+                        .PC_in(curr_pc), .PC_out(curr_pc));
+  // END OF PC CONTROL
 
-  // branch
-  //is done here, wire in control unit, flag bits and make sure to sll imediate by 1
-  pc_control pc_branch (.bsig(branch), .C(), .I(), .F(), .regsrc(), .PC_in(), .PC_out());
-
-  wire v;
-  wire alu_in1;
-  wire alu_in2;
-  wire alu_out;
-  // control ALU mux for rs or imm value
   // ALU
-  alu alu (.aluin1(), .aluin2(), .opcode(aluop), .aluout(alu_out), .err(v))
+  // recieves src1 always
+  // mux for src2 and signext imm
+  alu alu (.aluin1(srcdata1), .aluin2(alu_in2), .opcode(aluop), .aluout(alu_out), .err(v))
+  wire [15:0] alu_in2;
+  wire [15:0] alu_out;
+  wire s;
+  assign s = curr_instr[3];
+  // control ALU mux for rs or imm value
+  assign alu_in2 = alusrc ? (alusext ? {s,s,s,s,s,s,s,s, curr_instr[7:0]} : {s,s,s,s,s,s,s,s,s,s,s,s, curr_instr[3:0]}) :
+    srcdata2;
+  // END OF ALU
 
-  // FLAG
-
-  // is there no mux after alu into mem?
+  // FLAG CONTROL
+  flag_reg flag_controller (.n_in(n), .v_in(v), .z_in(z), .read_flag(flag_bits));
+  wire [2:0] flag_bits; // flag_bits is the output 
+  wire n;
+  wire v;
+  wire z;
+  assign n = alu_out[15];
+  assign z = alu_out == 16'b0;
+  // END OF FLAG CONTROL
   
-  wire mem_out;
-  // ALU wires to memory and memory takes in 2 control unit signals, read or write
   // MEM
-  memory1c mem (.data_out(mem_out), .data_in(x), .addr(pc_curr), .enable(memread), .wr(memwrite), .clk(clk), .rst(rstn));
-  
+  memory1c mem (.data_out(mem_out), .data_in(srcdata2), .addr(alu_out), .enable(memread), .wr(memwrite), .clk(clk), .rst(rstn));
+  wire mem_out;
   // memory and ALU wires to mux and is controlled by cu signal, and wires to register file
-  // WRITEBACK MUX
+  // END OF MEM
   
+  // WRITEBACK MUX
+  wire writebackdata;
+  assign writebackdata = memtoreg ? mem_out: ;
+  // END OF WRITEBACK MUX
+
+  assign hlt = branch == 2'b11;
+  assign pc = curr_pc;
 endmodule

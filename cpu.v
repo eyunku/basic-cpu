@@ -17,7 +17,7 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
 
   // wire for register 1 and 2 output, and opcode
   // wire instruction to decode
-  // invoking decode, which also contains the register file
+  // invoking decode, which will wire to the register file
 
   // wire opcode to control unit
   // wire control unit outputs to many locations, like ALU, Mem, and writeback mux

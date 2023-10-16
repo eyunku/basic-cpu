@@ -52,7 +52,7 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // FETCH
   // TODO figure out rst_n interaction with memory
   wire [15:0] instruction;
-  memory1c instr_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
+  memory1c instruction_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
   // END OF FETCH
 
   // CONTROL UNIT
@@ -114,54 +114,24 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
       default: flag = 3'b00;
     endcase
   end
+  assign n_in = flag[2];
+  assign v_in = flag[1];
+  assign z_in = flag[0];
 
   // Seperate ALU and effective address
   assign alutomem = aluout;
   assign alutowb = aluout;
   // END OF EXECUTION STAGE
 
-  // ALU
-  // recieves src1 always
-  // mux for src2 and signext imm
-  alu alu (.aluin1(srcdata1), .aluin2(alu_in2), .opcode(aluop), .aluout(alu_out), .err(v))
-  wire [15:0] alu_in2;
-  wire [15:0] alu_out;
-  wire s;
-  assign s = curr_instr[3];
-  // control ALU mux for rs or imm value
-  assign alu_in2 = alusrc ? (alusext ? {s,s,s,s,s,s,s,s, curr_instr[7:0]} : {s,s,s,s,s,s,s,s,s,s,s,s, curr_instr[3:0]}) :
-    srcdata2;
-  // END OF ALU
+  // MEMORY STAGE
+  wire [15:0] mem;
+  memory1c cpu_memory (.data_out(mem), .data_in(SrcData1), .addr(alutomem), .enable(memread | (opcode == 4'b1001)), .wr(memwrite), .clk(clk), .rst(rst_n));
+  // END OF MEMORY STAGE
 
-  // FLAG CONTROL
-  flag_reg flag_controller (.clk(clk), .rst(rst),
-                            .n_write(1), .v_write(1), .z_write(1),
-                            .n_in(n), .v_in(v), .z_in(z),
-                            .n_out(n_out), .v_out(v_out), .z_out(z_out));
-  wire [2:0] flag_bits; // flag_bits is the output 
-  wire n;
-  wire v;
-  wire z;
-  wire n_out;
-  wire v_out;
-  wire z_out;
-  assign n = alu_out[15];
-  assign z = alu_out == 16'b0;
-  assign flag_bits = {n_out, v_out, z_out};
-  // END OF FLAG CONTROL
-  
-  // MEM
-  memory1c mem (.data_out(mem_out), .data_in(srcdata2), .addr(alu_out), .enable(memread), .wr(memwrite), .clk(clk), .rst(rstn));
-  wire mem_out;
-  // memory and ALU wires to mux and is controlled by cu signal, and wires to register file
-  // END OF MEM
-  
-  // WRITEBACK MUX
-  wire writebackdata;
-  assign writebackdata = memtoreg ? mem_out: alu_out;
-  // END OF WRITEBACK MUX
+  // WRITEBACK STAGE
+  assign DstData = memtoreg ? mem : alutowb;
+  // END OF WRITEBACK STAGE
 
   // stagewise status output
   assign hlt = branch == 2'b11;
-  assign pc = curr_pc;
 endmodule

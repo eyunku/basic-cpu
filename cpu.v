@@ -12,53 +12,57 @@
 // 
 
 module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
-  // initialize instruction memory how????
+  // FLAG REGISTER
+  wire n_in, v_in, z_in;
+  wire n_out, v_out, z_out;
+  flag_reg FLAG (.clk(clk), .rst(rst_n), .n_write(1), .v_write(1), .z_write(1),  .n_in(n_in),  .v_in(v_in),  .z_in(z_in),  .n_out(n_out),  .v_out(v_out),  .z_out(z_out));
 
-  reg [15:0] curr_pc;
-  assign curr_pc = rst_n ? 16'b0 : curr_pc;
-  // wire for instruction halfword
-  wire [15:0] instrget;
-  wire [15:0] curr_instr;
-  // FETCH INSTRUCTION
-  memory1c instr_mem (.data_out(instrget), .data_in(), .addr(pc_curr), .enable(0), .wr(0), .clk(clk), .rst(rstn));
-  assign curr_instr = rst_n ? 16'b0 : instrget;
-  // END OF FETCH INSTRUCTION
+  // REGISTER
+  wire [3:0] SrcReg1, SrcReg2, DstReg;
+  wire [15:0] DstData, SrcData1, SrcData2;
+
+  assign DstReg = instruction[11:8];
+  assign SrcReg1 = instruction[7:4];
+  assign SrcReg2 = instruction[3:0];
+
+  RegisterFile registerfile (.clk(clk), .rst(rst_n), .SrcReg1(SrcReg1), .SrcReg2(SrcReg2), .DstReg(DstReg), .WriteReg(regwrite), .DstData(DstData), .SrcData1(SrcData1), .SrcData2(SrcData2));
+  // END OF REGISTER
+
+  // PC REG + PC CONTROL
+  // TODO figure out pc_write state
+  // for PC
+  wire [15:0] pc_in, pc_out;
   
+  // for pc_control
+  wire [9:0] I;
+  wire [2:0] C, F;
+
+  assign I = instruction[8:0] << 1; // get offset
+  assign C = instruction[11:9]; // get condition code from instruction
+  assign F = {n_out, v_out, z_out};
+
+  // TODO add regsrc after completing decode
+  // TODO figure out PCS
+  pc_reg pc_reg (.clk(clk), .rst(rst_n), .pc_write(1), .pc_read(pcread), .pc_in(pc_in), .pc_out(pc_out));
+  pc_control pc_control (.bsig(branch), .C(C), .I(I), .F(F), .regsrc(SrcReg1), .PC_in(pc_out), .PC_out(pc_in));
+  // END OF PC REG + PC CONTROL
+
+  // Fetch Stage, get instruction
+  // TODO figure out rst_n interaction with memory
+  wire [15:0] instruction;
+  memory1c instr_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
+
   // CONTROL UNIT
-  control control_unit (.opcode(curr_instr[15:12]), .regwrite(regwrite), .alusrc(alusrc), .memread(memread), .memwrite(memwrite),
-                        .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .alusext(alusext));
-  // control wires
-  wire regwrite;
-  wire alusrc;
-  wire memread;
-  wire memwrite;
-  wire [3:0] aluop;
-  wire memtoreg;
+  wire [3:0] opcode;
+  wire regwrite, alusrc, memread, memwrite, memtoreg, pcread;
   wire [1:0] branch;
-  wire alusext;
+  wire [2:0] alusext;
+  wire [3:0] aluop;
+  control control_unit (.opcode(opcode), .regwrite(regwrite), .alusrc(alusrc), .memread(memread), .memwrite(memwrite), .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .alusext(alusext), .pcread(pcread));
   // END OF CONTROL UNIT
 
-  // REGISTER FILE
-  // handle invalid read registers set to z
-  // pls implement the 0 register
-  RegisterFile register_file (.clk(clk), .rst(rstn), .SrcReg1(src1_register), .SrcReg2(src2_register), .DstReg(curr_instr[15:12]),
-                              .WriteReg(writereg), .DstData(dstdata), .SrcData1(srcdata1), .SrcData2(srcdata2));
-  // logic for mem-write signal (store word will have different registers)
-  wire [3:0] src2_register;
-  wire [3:0] src1_register;
-  assign src1_register = sext ? curr_instr[11:8] : curr_instr[7:4];          // LLB and LHB case requires src1 to be the read and write
-  assign src2_register = memwrite ? curr_instr[11:8] : curr_instr[3:0];      // only store word case
-  wire writereg;                                      // for any kind of write command
-  assign writereg = regwrite | memwrite | memtoreg;
-  wire [15:0] dstdata;                                // destination data will be wired later
-  wire [15:0] srcdata1, srcdata2;                     // outputs of the read instruction
-  // END OF REGISTER FILE
-  
-  // PC CONTROL
-  // is done here, wire in control unit, flag bits and make sure to shift imediate by 1
-  pc_control pc_controller (.bsig(branch), .C(curr_instr[11:9]), .I({curr_instr[7:0], 1'b0}), .F(flag_bits), .regsrc(curr_instr[7:4]),
-                        .PC_in(curr_pc), .PC_out(curr_pc));
-  // END OF PC CONTROL
+  // DECODE STAGE
+  // END OF DECODE STAGE
 
   // ALU
   // recieves src1 always

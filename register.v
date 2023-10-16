@@ -122,6 +122,35 @@ module flag_reg (input clk, input rst, input n_write, input v_write, input z_wri
   assign z_out = z_read;
 endmodule
 
+module pc_reg (input clk, input rst, input pc_write, input pc_read, input [15:0] pc_in, output [15:0] pc_out);
+  wire [15:0] hanging;
+  Register pc (.clk(clk), .rst(rst), .D(pc_in), .WriteReg(pc_write), .ReadEnable1(pc_read), .ReadEnable2(0), .Bitline1(pc_out), .Bitline2(hanging));
+endmodule
+
+module t_pc_reg ();
+  reg clk, rst, pc_write, pc_read;
+  reg [15:0] pc_in;
+  wire [15:0] pc_out;
+
+  pc_reg dut (
+    .clk(clk),
+    .rst(rst),
+    .pc_write(pc_write),
+    .pc_read(pc_read),
+    .pc_in(pc_in),
+    .pc_out(pc_out)
+  );
+
+  initial begin
+    clk = 0; rst = 0; pc_write = 0; pc_read = 1; pc_in = 16'b0; #10
+    $display("pc_out should be 16'bx: %b", pc_out);
+    clk = 1; rst = 0; pc_write = 1; pc_read = 0; pc_in = 16'h1111; #10
+    $display("pc_out should be 16'bz: %b", pc_out);
+    clk = 0; rst = 0; pc_write = 0; pc_read = 1; pc_in = 16'h2222; #10
+    $display("pc_out 16'h1111: %b", pc_out);
+  end
+endmodule
+
 module test_bench_flag ();
 reg nw, vw, zw, nn, vn, zn, clk, rst;
 wire n, v, z;

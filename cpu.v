@@ -14,7 +14,7 @@
 module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // initialize instruction memory how????
 
-  wire [15:0] curr_pc;
+  reg [15:0] curr_pc;
   assign curr_pc = rst_n ? 16'b0 : curr_pc;
   // wire for instruction halfword
   wire [15:0] instrget;

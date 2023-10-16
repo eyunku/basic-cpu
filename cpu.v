@@ -74,13 +74,20 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // END OF ALU
 
   // FLAG CONTROL
-  flag_reg flag_controller (.n_in(n), .v_in(v), .z_in(z), .read_flag(flag_bits));
+  flag_reg flag_controller (.clk(clk), .rst(rst),
+                            .n_write(1), .v_write(1), .z_write(1),
+                            .n_in(n), .v_in(v), .z_in(z),
+                            .n_out(n_out), .v_out(v_out), .z_out(z_out));
   wire [2:0] flag_bits; // flag_bits is the output 
   wire n;
   wire v;
   wire z;
+  wire n_out;
+  wire v_out;
+  wire z_out;
   assign n = alu_out[15];
   assign z = alu_out == 16'b0;
+  assign flag_bits = {n_out, v_out, z_out};
   // END OF FLAG CONTROL
   
   // MEM
@@ -91,9 +98,10 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   
   // WRITEBACK MUX
   wire writebackdata;
-  assign writebackdata = memtoreg ? mem_out: ;
+  assign writebackdata = memtoreg ? mem_out: alu_out;
   // END OF WRITEBACK MUX
 
+  // stagewise status output
   assign hlt = branch == 2'b11;
   assign pc = curr_pc;
 endmodule

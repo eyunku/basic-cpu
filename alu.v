@@ -1,74 +1,68 @@
-module alu (aluin1, aluin2, opcode, aluout, err);
-  input[15:0] aluin1, aluin2;
-  input[3:0] opcode;
-  output[15:0] aluout;
-  output err;
+/**
+* ALU module that takes in 2 inputs and has one output and
+* one err that marks overflow. aluin1 is always from a register, and
+* aluin2 is connected to a MUX that controls if it's a SEXT
+* or register value. If an incorrect aluop is passed in, err is
+* set to 1, and aluout is set to 0.
+**/
+module alu (aluin1, aluin2, aluop, aluout, err);
+    // aluin1 is always from a register
+    // aluin2 can be from register or immediate
+    // aluout is our 16-bit output
+    // err is set to true if overflow happens
+    /** aluop are as follows:
+    0: ADD
+    1: SUB
+    2: XOR
+    3: RED
+    4: SLL
+    5: SRA
+    6: ROR
+    7: PADDSB
+    8: LLB
+    9: LHB
+    **/
 
-  
-  // output wire for alu
-  wire add_out;
-  wire sub_out;
-  wire xor_out;
-  wire red_out;
-  wire sll_out;
-  wire sra_out;
-  wire ror_out;
-  wire paddsb_out;
-  wire lw_out;
-  wire sw_out;
-  wire llb_out;
-  wire lhb_out;
-  wire b_out;
-  wire br_out;
-  wire pcs_out;
-  wire hlt_out;
+    input[15:0] aluin1, aluin2;
+    input[3:0] aluop;
+    output[15:0] aluout;
+    output err;
 
-  // error wires?
-  
-  // compute components
-  add add (.a(aluin2), .b(aluin2), .out(add_out));
-  sub sub (.a(aluin2), .b(aluin2), .out(sub_out));
-  assign xor_out = aluin1 ^ aluin2;
-  red red (.a(aluin2), .b(aluin2), .out(red_out));
-  
-  sll sll (.value(aluin2), .shift_amount(aluin2), .out(sll_out));
-  sra sra (.value(aluin2), .shift_amount(aluin2), .out(sra_out));
-  sll sll (.value(aluin2), .shift_amount(aluin2), .out(ror_out));
-  
-  paddsb paddsb (.a(aluin2), .b(aluin2), .out(paddsb_out));
-  lw lw (.a(aluin2), .b(aluin2), .out(lw_out));
-  sw sw (.a(aluin2), .b(aluin2), .out(sw_out));
-  llb llb (.a(aluin2), .b(aluin2), .out(llb_out));
-  lhb lhb (.a(aluin2), .b(aluin2), .out(lhb_out));
-  b b (.a(aluin2), .b(aluin2), .out(b_out));
-  br br (.a(aluin2), .b(aluin2), .out(br_out));
-  pcs pcs (.a(aluin2), .b(aluin2), .out(pcs_out));
-  hlt hlt (.a(aluin2), .b(aluin2), .out(hlt_out));
+    // output wires
+    wire[15:0] ADD, SUB, XOR, RED, SLL, SRA, ROR, PADDSB, LLB, LHB;
+    wire ADDErr, SUBErr, XORErr, REDErr, SLLErr, SRAErr, RORErr, PADDSBErr, LLBErr, LHBErr;
 
-  // alu mux result decision
-  reg out
-  always @(*) begin
-    case (opcode)
-      4'h0: out = add_out; // ADD
-      4'h1: out = sub_out; // SUB
-      4'h2: out = xor_out; // XOR
-      4'h3: out = red_out; // RED
-      4'h4: out = sll_out; // SLL
-      4'h5: out = sra_out; // SRA
-      4'h6: out = ror_out; // ROR
-      4'h7: out = paddsub_out; // PADDSB
-      4'h8: out = lw_out; // LW
-      4'h9: out = sw_out; // SW
-      4'hA: out = llb_out; // LLB
-      4'hB: out = lhb_out; // LHB
-      4'hC: out = b_out; // B
-      4'hD: out = br_out; // BR
-      4'hE: out = pcs_out; // PCS
-      4'hF: out = hlt_out; // HLT
-    endcase
-  end
-  assign err =;
-  assign aluout = out;
+    carry_lookahead add(.a(aluin1), .b(aluin2), .sum(ADD), .overflow(ADDErr), .mode(0));
+    carry_lookahead sub(.a(aluin1), .b(aluin2), .sum(SUB), .overflow(SUBErr), .mode(1));
+    xor xor(.a(aluin1), .b(aluin2), .out(XOR)); assign XORErr = 0;
+    red red(.in1(aluin1), .in2(aluin2), .out(RED)); assign REDErr = 0;
+    sll sll(.shift_amount(aluin2[3:0]), .value(aluin1), .out(SLL)); assign SLLErr = 0;
+    sra sra(.shift_amount(aluin2[3:0]), .value(aluin1), .out(SRA)); assign SRAErr = 0;
+    ror ror(.shift_amount(aluin2[3:0]), .value(aluin1), .out(ROR)); assign RORErr = 0;
+    paddsb paddsb(.a(aluin1), .b(aluin2), .out(PADDSB)); assign PADDSBErr = 0;
+    llb llb(.in(aluin1), .imm(aluin2), .out(LLB)); assign LLBErr = 0;
+    lhb lhb(.in(aluin1), .imm(aluin2), .out(LHB)); assign LHBErr = 0;
+
+    reg[15:0] out;
+    reg tempErr;
+    always @* begin
+        case(aluop)
+            4'h0: begin out = ADD; tempErr = ADDErr; end
+            4'h1: begin out = SUB; tempErr = SUBErr; end
+            4'h2: begin out = XOR; tempErr = XORErr; end
+            4'h3: begin out = RED; tempErr = REDErr; end
+            4'h4: begin out = SLL; tempErr = SLLErr; end
+            4'h5: begin out = SRA; tempErr = SRAErr; end
+            4'h6: begin out = ROR; tempErr = RORErr; end
+            4'h7: begin out = PADDSB; tempErr = PADDSBErr; end
+            4'h8: begin out = LLB; tempErr = LLBErr; end
+            4'h9: begin out = LHB; tempErr = LHBErr; end
+            default: begin out = 16'h0000; tempErr = 1; end
+        endcase
+    end
+
+    assign aluout = out;
+    assign err = tempErr;
 endmodule
 
 module llb(in, imm, out);
@@ -253,54 +247,47 @@ module paddsb(a, b, out):
     assign out = {S4, S3, S2, S1};
 endmodule
 
-module red(a, b, out):
-    input [7:0] a, b;
-    output []
-endmodule
+module red(in1, in2, out):
+    input[15:0] in1, in2;
+    output[15:0] out;
 
-/**
-* Applies xor onto two inputs.
-**/
-module xor(a, b, out);
-    input [15:0] a, b;
-    output [15:0] out;
+    // wires to hold the portions of the inputs
+    wire[3:0] a1, a2, b1, b2, c1, c2, d1, d2;
+    a2[3] = in1[15];
+    a2[2] = in1[14];
+    a2[1] = in1[13];
+    a2[0] = in1[12];
+    a1[3] = in1[11];
+    a1[2] = in1[10];
+    a1[1] = in1[9];
+    a1[0] = in1[8];
+    b2[3] = in1[7];
+    b2[2] = in1[6];
+    b2[1] = in1[5];
+    b2[0] = in1[4];
+    b1[3] = in1[3];
+    b1[2] = in1[2];
+    b1[1] = in1[1];
+    b1[0] = in1[0];
+    c2[3] = in2[15];
+    c2[2] = in2[14];
+    c2[1] = in2[13];
+    c2[0] = in2[12];
+    c1[3] = in2[11];
+    c1[2] = in2[10];
+    c1[1] = in2[9];
+    c1[0] = in2[8];
+    d2[3] = in2[7];
+    d2[2] = in2[6];
+    d2[1] = in2[5];
+    d2[0] = in2[4];
+    d1[3] = in2[3];
+    d1[2] = in2[2];
+    d1[1] = in2[1];
+    d1[0] = in2[0];
 
-    // performs the xor operation onto the operands a and b
-    assign out = a^b;
-endmodule
-
-/**
-* Does four half-byte additions in parallel
-**/
-module paddsb(a, b, out):
-    input [15:0] a, b;
-    output [15:0] out;
-
-    // Contains output of 4-bit add
-    wire [3:0] C1, C2, C3, C4;
-    // Contains arithmetic overflow bit after 4-bit add
-    wire E1, E2, E3, E4;
-    // Contains result of the 4-bit add + saturating arithmetic
-    wire [3:0] S1, S2, S3, S4;
-
-    // Performs 4-bit parallel addition
-    add_4bit_cla p0 (.a(a[3:0]), .b(b[3:0]), .s(C1), .cin(0), .overflow(E1));
-    add_4bit_cla p1 (.a(a[7:4]), .b(b[7:4]), .s(C2), .cin(0), .overflow(E2));
-    add_4bit_cla p2 (.a(a[11:8]), .b(b[11:8]), .s(C3), .cin(0), .overflow(E3));
-    add_4bit_cla p3 (.a(a[15:12]), .b(b[15:12]), .s(C4), .cin(0), .overflow(E4));
-
-    // Arithmetic saturation
-    assign S1 = E1 ? (C1[3] ? 4'b0111 : 4'b1001) : C1;
-    assign S2 = E2 ? (C2[3] ? 4'b0111 : 4'b1001) : C2;
-    assign S3 = E3 ? (C3[3] ? 4'b0111 : 4'b1001) : C3;
-    assign S4 = E4 ? (C4[3] ? 4'b0111 : 4'b1001) : C4;
-
-    assign out = {S4, S3, S2, S1};
-endmodule
-
-module red(a, b, out):
-    input [7:0] a, b;
-    output []
+    wire[7:0] temp;
+    
 endmodule
 
 /**
@@ -309,7 +296,7 @@ endmodule
 **/
 module full_adder(a, b, cin, s);
     input a, b, cin;
-    output cout, s;
+    output s;
 
     // sum bit determined by a XOR b XOR cin
     assign s = a ^ b ^ cin;
@@ -338,10 +325,9 @@ endmodule
 **/
 module carry_lookahead_4bit(a, b, cin, sum, cout, mode);
     input[3:0] a, b; // 4-bit inputs to add
-    input mode;
+    input mode, cin;
     output[3:0] sum;
     output cout;
-    output[2:0] code;
 
     // create subtract mode
     wire[3:0] negb;
@@ -370,7 +356,7 @@ module carry_lookahead_4bit(a, b, cin, sum, cout, mode);
     carry_block c2(.a(a[2]), .b(mode ? negb[2]: b[2]), .cin(c1_2), .p(p2), .g(g2), .cout(c2_3));
 
     full_adder f3(.a(a[3]), .b(mode ? negb[3] : b[3]), .cin(c2_3), .s(sum[3]));
-    carry_block c3(.a(a[3]), .b(mode ? negb[3]: b[3]), .cin(c2_3), .p(p3), .g(g3), .cout(3_4));
+    carry_block c3(.a(a[3]), .b(mode ? negb[3]: b[3]), .cin(c2_3), .p(p3), .g(g3), .cout(c3_4));
     
     // generate carry-out of whole module
     wire P, G;

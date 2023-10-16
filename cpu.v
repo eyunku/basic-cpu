@@ -55,8 +55,8 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // END OF REGISTER FILE
   
   // PC CONTROL
-  // is done here, wire in control unit, flag bits and make sure to sll imediate by 1
-  pc_control pc_controller (.bsig(branch), .C(curr_instr[11:9]), .I(curr_instr[8:0]), .F(flag_bits), .regsrc(curr_instr[7:4]),
+  // is done here, wire in control unit, flag bits and make sure to shift imediate by 1
+  pc_control pc_controller (.bsig(branch), .C(curr_instr[11:9]), .I({curr_instr[7:0], 1'b0}), .F(flag_bits), .regsrc(curr_instr[7:4]),
                         .PC_in(curr_pc), .PC_out(curr_pc));
   // END OF PC CONTROL
 

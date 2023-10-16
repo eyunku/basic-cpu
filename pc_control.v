@@ -4,7 +4,6 @@
 module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F, input [15:0] regsrc, input [15:0] PC_in, output [15:0] PC_out);
 
   // wires for all your diff branches
-  wire truth;
 
   // ternary for deciding which branch instruction
   // 000 not equal (Z = 0)
@@ -15,8 +14,20 @@ module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F
   // 101 Less Than or Equal (N = 1 or Z = 1)
   // 110 Overflow (V = 1)
   // 111 Unconditional
+  reg truth;
 
-  assign truth = C[0] ? (C[1] ? (C[2] ? 1 : (F[1] ? 1 : 0)) : (C[2] ? (F[2] | F[0]) : (~F[0] | (F[0] & F[2])? 0 : 1))) : (C[1] ? (C[2] ? (F[2] ? 1 : 0) : (F[0] & F[2] ? 0 : 1)) : (C[2] ? (F[0] ? 1 : 0) : (F[0] ? 0 : 1)));
+  always @(*) begin
+    case (C)
+      3'b000: truth = ~F[0];
+      3'b001: truth = F[0];
+      3'b010: truth = ~F[0] & ~F[2];
+      3'b011: truth = F[2];
+      3'b100: truth = (F[0] == 1) & (~F[0] & ~F[2]);
+      3'b101: truth = F[0] | F[2];
+      3'b110: truth = F[1];
+      3'b111: truth = 1;
+    endcase
+  end
 
   wire [15:0] signext_imm;
   assign signext_imm = I[8] ? {7'b1111111, I[8:0]} : {7'b0000000, I[8:0]};

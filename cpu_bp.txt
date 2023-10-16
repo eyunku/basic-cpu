@@ -9,3 +9,5 @@ Uses: DstReg, SrcReg1, imm[3:0]
 LLB, LHB
 Uses: DstReg, imm[7:0]
 
+Execution black Magic
+ADD, PADDSB, SUB, XOR, RED

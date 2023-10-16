@@ -27,7 +27,7 @@ assign bf = RegId[0] ? {be, 1'b0} : {1'b0, be};
 assign Wordline = WriteReg ? bf : 16'b0000000000000000;
 endmodule
 
-module BitCell( input clk,  input rst, input D, input WriteEnable, input ReadEnable1, input ReadEnable2, inout Bitline1, inout Bitline2);
+module BitCell (input clk,  input rst, input D, input WriteEnable, input ReadEnable1, input ReadEnable2, inout Bitline1, inout Bitline2);
 // based on the decodings we return the contents of the registers needed
 wire w1;
 
@@ -57,7 +57,6 @@ endmodule
 
 
 module Register (input clk,  input rst, input [15:0] D, input WriteReg, input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, inout [15:0] Bitline2);
-
 BitCell b1(.clk(clk), .rst(rst), .D(D[0]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[0]), .Bitline2(Bitline2[0]));
 BitCell b2(.clk(clk), .rst(rst), .D(D[1]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[1]), .Bitline2(Bitline2[1]));
 BitCell b3(.clk(clk), .rst(rst), .D(D[2]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[2]), .Bitline2(Bitline2[2]));
@@ -74,7 +73,6 @@ BitCell b13(.clk(clk), .rst(rst), .D(D[12]), .WriteEnable(WriteReg), .ReadEnable
 BitCell b14(.clk(clk), .rst(rst), .D(D[13]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[13]), .Bitline2(Bitline2[13]));
 BitCell b15(.clk(clk), .rst(rst), .D(D[14]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[14]), .Bitline2(Bitline2[14]));
 BitCell b16(.clk(clk), .rst(rst), .D(D[15]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[15]), .Bitline2(Bitline2[15]));
-
 endmodule
 
 module Register0 (input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, inout [15:0] Bitline2);
@@ -108,5 +106,16 @@ Register rc (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable
 Register rd (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[13]), .ReadEnable2(w_ren2[13]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 Register re (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[14]), .ReadEnable2(w_ren2[14]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 Register rf (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[15]), .ReadEnable2(w_ren2[15]), .Bitline1(SrcData1), .Bitline2(SrcData2));
+endmodule
 
+// flag register containing 3 bitcell registers
+module flag_reg (input clk, input rst, input n_write, input v_write, input z_write, input n_in, input v_in, input z_in, output [2:0] flag_out);
+  wire n_read;
+  wire v_read;
+  wire z_read;
+  bitcell bitn (.clk(clk), .rst(rst), .D(n_in), .WriteEnable(n_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(n_read), .Bitline2());
+  bitcell bitv (.clk(clk), .rst(rst), .D(v_in), .WriteEnable(v_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(v_read), .Bitline2());
+  bitcell bitz (.clk(clk), .rst(rst), .D(z_in), .WriteEnable(z_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(z_read), .Bitline2());
+  
+  assign flag_out = {n_read, v_read, z_read}
 endmodule

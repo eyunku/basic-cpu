@@ -1,32 +1,61 @@
-module PC_control(input [2:0] C, input [8:0] I, input [2:0] F, input [15:0] PC_in, output [15:0] PC_out);
+// pc_control.v
 
-// wires for all your diff branches
-wire truth;
+// pc contorl for all branch conditions
+module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F, input [15:0] regsrc, input [15:0] PC_in, output [15:0] PC_out);
 
-// ternary for deciding which branch instruction
-// 000 not equal (Z = 0)
-// 001 equal (z = 1)
-// 010 greater than (Z = N = 0)
-// 011 Less Than (N = 1) 
-// 100 Greater Than or Equal (Z = 1 or Z = N = 0)
-// 101 Less Than or Equal (N = 1 or Z = 1)
-// 110 Overflow (V = 1)
-// 111 Unconditional
+  // wires for all your diff branches
+  reg truth;
 
-assign truth = C[0] ? (C[1] ? (C[2] ? 1 : (F[1] ? 1 : 0)) : (C[2] ? (F[2] | F[0]) : (~F[0] | (F[0] & F[2])? 0 : 1) )) : (C[1] ? (C[2] ? (F[2] ? 1 : 0) : (F[0] & F[2] ? 0 : 1)) : (C[2] ? (F[0] ? 1 : 0) : (F[0] ? 0 : 1)));
+  // ternary for deciding which branch instruction
+  // 000 not equal (Z = 0)
+  // 001 equal (z = 1)
+  // 010 greater than (Z = N = 0)
+  // 011 Less Than (N = 1) 
+  // 100 Greater Than or Equal (Z = 1 or Z = N = 0)
+  // 101 Less Than or Equal (N = 1 or Z = 1)
+  // 110 Overflow (V = 1)
+  // 111 Unconditional
 
-wire [15:0] signext;
-assign signext = I[8] ? {7'b1111111, I[8:0]} : {7'b0000000, I[8:0]};
+  always @(*) begin
+    case (C)
+      3'b000: truth = ~F[0];
+      3'b001: truth = F[0];
+      3'b010: truth = ~F[0] & ~F[2];
+      3'b011: truth = F[2];
+      3'b100: truth = F[0] & (~F[0] & ~F[2]);
+      3'b101: truth = F[0] | F[2];
+      3'b110: truth = F[1];
+      3'b111: truth = 1;
+    endcase
+  end
 
-wire [15:0] sum2;
-wire [15:0] out;
-wire ovfl2;
-wire ovfl_add;
 
-addsub_16bit add_two(.Sum(sum2), .Ovfl(ovfl2), .A(PC_in), .B(16'h0002), .sub(0));
-addsub_16bit add_opt(.Sum(out), .Ovfl(ovfl_add), .A(sum2), .B(signext), .sub(0));
+  wire [15:0] signext_imm;
+  assign signext_imm = I[8] ? {7'b1111111, I[8:0]} : {7'b0000000, I[8:0]};
 
-assign PC_out = truth ? out: sum2;
+  wire [15:0] sum2;
+  wire [15:0] b_out;
+  wire ovfl2;
+  wire ovfl_add;
+  reg [15:0] out;
+
+  addsub_16bit add_two(.Sum(sum2), .Ovfl(ovfl2), .A(PC_in), .B(16'h0002), .sub(0));
+  addsub_16bit add_opt(.Sum(b_out), .Ovfl(ovfl_add), .A(sum2), .B(signext_imm), .sub(0));
+
+  // case statement for branch signal
+  // 00: no branch, 01: b, 10: br, 11: hlt
+  // must evaluate whether branching is true or not, if it isnt we just run the sum2
+  always @(*) begin
+    case (bsig)
+      2'b00: out = sum2;
+      2'b01: out = truth ? b_out: sum2;
+      2'b10: out = truth ? regsrc: sum2;
+      2'b11: out = PC_in;
+      default: out = 16'bz;
+    endcase
+  end
+  
+  assign PC_out = out;
 endmodule
 
 module addsub_16bit (Sum, Ovfl, A, B, sub);
@@ -84,19 +113,22 @@ endmodule
 module test_bench_write_branch ();
 reg [2:0] c, f;
 reg signed [8:0] i;
+reg [1:0] signal;
+reg [15:0] data;
 reg [15:0] in;
 wire [15:0] OUT;
-wire [15:0] d;
 
-PC_control dut (.C(c), .I(i), .F(f), .PC_in(in), .PC_out(OUT));
+pc_control dut (.bsig(signal), .C(c), .I(i), .F(f), .regsrc(data), .PC_in(in), .PC_out(OUT));
 
 initial begin
-c = 3'b000; f = 3'b000; i = 9'b000000001; in = 16'h0000; #10;
-$display("Testing not equals branch output is %b", OUT);
-c = 3'b000; f = 3'b001; i = 9'b000000001; in = 16'h0000; #10;
-$display("Testing not equals no branch output is %b", OUT);
-
+signal = 2'b00; data = 16'hFFFF; c = 3'b101; f = 3'b100; i = 9'b000000010; in = 16'h0001; #10;
+$display("no branch output is %b", OUT);
+signal = 2'b01; data = 16'hFFFF; c = 3'b100; f = 3'b011; i = 9'b000000010; in = 16'h0001; #10;
+$display("branch output is %b", OUT);
+signal = 2'b10; data = 16'hFFFF; c = 3'b100; f = 3'b000; i = 9'b000000010; in = 16'h0001; #10;
+$display("branch with register output is %b", OUT);
+signal = 2'b11; data = 16'hFFFF; c = 3'b111; f = 3'b101; i = 9'b000000010; in = 16'h0001; #10;
+$display("halt signal, output is %b", OUT);
 $stop;
 end
 endmodule
-

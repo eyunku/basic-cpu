@@ -76,8 +76,8 @@ BitCell b16(.clk(clk), .rst(rst), .D(D[15]), .WriteEnable(WriteReg), .ReadEnable
 endmodule
 
 module Register0 (input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, inout [15:0] Bitline2);
-  assign Bitline1 = ReadEnable1 ? 16'b0 : z;
-  assign Bitline2 = ReadEnable2 ? 16'b0 : z;
+  assign Bitline1 = ReadEnable1 ? 16'b0 : 16'bz;
+  assign Bitline2 = ReadEnable2 ? 16'b0 : 16'bz;
 endmodule
 
 module RegisterFile(input clk, input rst, input [3:0] SrcReg1, input [3:0] SrcReg2, input [3:0] DstReg, input WriteReg, input [15:0] DstData, inout [15:0] SrcData1, inout [15:0] SrcData2);
@@ -109,13 +109,83 @@ Register rf (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable
 endmodule
 
 // flag register containing 3 bitcell registers
-module flag_reg (input clk, input rst, input n_write, input v_write, input z_write, input n_in, input v_in, input z_in, output [2:0] flag_out);
+module flag_reg (input clk, input rst, input n_write, input v_write, input z_write, input n_in, input v_in, input z_in, output n_out, output v_out, output z_out);
   wire n_read;
   wire v_read;
   wire z_read;
-  bitcell bitn (.clk(clk), .rst(rst), .D(n_in), .WriteEnable(n_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(n_read), .Bitline2());
-  bitcell bitv (.clk(clk), .rst(rst), .D(v_in), .WriteEnable(v_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(v_read), .Bitline2());
-  bitcell bitz (.clk(clk), .rst(rst), .D(z_in), .WriteEnable(z_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(z_read), .Bitline2());
+  BitCell bitn (.clk(clk), .rst(rst), .D(n_in), .WriteEnable(n_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(n_read), .Bitline2());
+  BitCell bitv (.clk(clk), .rst(rst), .D(v_in), .WriteEnable(v_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(v_read), .Bitline2());
+  BitCell bitz (.clk(clk), .rst(rst), .D(z_in), .WriteEnable(z_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(z_read), .Bitline2());
   
-  assign flag_out = {n_read, v_read, z_read}
+  assign n_out = n_read;
+  assign v_out = v_read;
+  assign z_out = z_read;
+endmodule
+
+module test_bench_flag ();
+reg nw, vw, zw, nn, vn, zn, clk, rst;
+wire n, v, z;
+
+flag_reg dut (.clk(clk), .rst(rst), .n_write(nw), .v_write(vw), .z_write(zw), .n_in(nn), .v_in(vn), .z_in(zn), .n_out(n), .v_out(v), .z_out(z));
+
+initial begin
+clk = 0;
+#5;
+rst = 1;
+nw = 1; vw = 1; zw = 1; nn = 1; vn = 1; zn = 1; #20;
+rst = 0;
+nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 1; #20;
+$display("after setting zero bit, flag is %b %b %b", n, v, z);
+rst = 0;
+nw = 0; vw = 1; zw = 0; nn = 1; vn = 1; zn = 1; #20;
+$display("after setting zero bit, flag is %b %b %b", n, v, z);
+rst = 0; 
+nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 0; #20;
+$display("after setting zero bit, flag is %b %b %b", n, v, z);
+rst = 0; 
+nw = 1; vw = 0; zw = 0; nn = 1; vn = 1; zn = 1; #20;
+$display("after setting zero bit, flag is %b %b %b", n, v, z);
+$stop;
+end
+
+always begin
+#10;
+clk = ~clk;
+end
+
+endmodule
+
+
+module test_bench_RF ();
+reg clk, rst, wr;
+reg [3:0] sr1, sr2, dr;
+reg [15:0] dd;
+wire [15:0] sd1, sd2;
+
+RegisterFile dut (.clk(clk), .rst(rst), .SrcReg1(sr1), .SrcReg2(sr2), .DstReg(dr), .WriteReg(wr), .DstData(dd), .SrcData1(sd1), .SrcData2(sd2));
+
+initial begin
+clk = 0;
+#5;
+rst = 1; sr1 = 4'hA; sr2 = 4'hA; #20;
+rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'hFACE; #20;
+$display("first write and read output is %b and %b", sd1, sd2);
+rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'h1111; #20;
+$display("second write and read output is %b and %b", sd1, sd2);
+rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'hFACE; #20;
+$display("second write and read output is %b and %b", sd1, sd2);
+rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'h2222; #20;
+$display("second write and read output is %b and %b", sd1, sd2);
+rst = 0; sr1 = 4'h0; sr2 = 4'hA; wr = 1; dr = 4'h0; dd = 16'h2222; #20;
+$display("second write and read output is %b and %b", sd1, sd2);
+rst = 0; sr1 = 4'h0; sr2 = 4'h0; wr = 0; dr = 4'h0; dd = 16'h2222; #20;
+$display("second write and read output is %b and %b", sd1, sd2);
+$stop;
+end
+
+always begin
+#10;
+clk = ~clk;
+end
+
 endmodule

@@ -15,6 +15,7 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // FLAG REGISTER
   wire n_in, v_in, z_in;
   wire n_out, v_out, z_out;
+  // TODO figure out write conditions, set it to clk?
   flag_reg FLAG (.clk(clk), .rst(rst_n), .n_write(1), .v_write(1), .z_write(1),  .n_in(n_in),  .v_in(v_in),  .z_in(z_in),  .n_out(n_out),  .v_out(v_out),  .z_out(z_out));
 
   // REGISTER
@@ -22,7 +23,8 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   wire [15:0] DstData, SrcData1, SrcData2;
 
   assign DstReg = instruction[11:8];
-  assign SrcReg1 = instruction[7:4];
+  // Handling for LLB and LHB
+  assign SrcReg1 = (instruction[15:11] == 4'b1010 | instruction[15:11] == 4'b1011) ? DstReg : instruction[7:4];
   assign SrcReg2 = instruction[3:0];
 
   RegisterFile registerfile (.clk(clk), .rst(rst_n), .SrcReg1(SrcReg1), .SrcReg2(SrcReg2), .DstReg(DstReg), .WriteReg(regwrite), .DstData(DstData), .SrcData1(SrcData1), .SrcData2(SrcData2));
@@ -47,10 +49,11 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   pc_control pc_control (.bsig(branch), .C(C), .I(I), .F(F), .regsrc(SrcReg1), .PC_in(pc_out), .PC_out(pc_in));
   // END OF PC REG + PC CONTROL
 
-  // Fetch Stage, get instruction
+  // FETCH
   // TODO figure out rst_n interaction with memory
   wire [15:0] instruction;
   memory1c instr_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
+  // END OF FETCH
 
   // CONTROL UNIT
   wire [3:0] opcode;
@@ -62,7 +65,60 @@ module cpu (input clk, input rst_n, output hlt, output [15:0] pc);
   // END OF CONTROL UNIT
 
   // DECODE STAGE
+  wire [15:0] aluin1, aluin2;
+
+  // imm value handling
+  wire [15:0] imm_4bit;
+  wire [15:0] imm_8bit;
+  wire [15:0] imm_16bit;
+  // sext imm
+  assign imm_4bit = instruction[3] ? {12'hFFF, curr_instr[3:0]} : {12'b0, curr_instr[3:0]};
+  assign imm_8bit = {8'b0, curr_instr[7:0]};
+  // determine imm value to pass in
+  assign imm_16bit = ALUSext ? imm_8bit : imm_4bit;
+
+  // ALUin1
+  assign aluin1 = SrcReg1;
+  // ALUin2
+  assign aluin2 = alusrc ? imm_16bit : SrcReg2;
   // END OF DECODE STAGE
+
+  // EXECUTION STAGE
+  wire [15:0] aluout, alutomem, alutowb;
+  wire err;
+  alu alu(.aluin1(aluin1), .aluin2(aluin2), .aluop(aluop), .aluout(aluout), .err(err));
+  
+  // Flags
+  reg [2:0] flag;
+  wire n, z, v;
+  assign n = aluout[15];
+  assign z = aluout == 16'h0000;
+  assign v = err;
+
+  always @(*) begin
+    case(aluop):
+      3'h0: begin
+        flag[0] = z;
+        flag[1] = v;
+        flag[2] = n;
+      end
+      3'h1: begin
+        flag[0] = z;
+        flag[1] = v;
+        flag[2] = n;
+      end
+      3'h2: flag[0] = z;
+      3'h4: flag[0] = z;
+      3'h5: flag[0] = z;
+      3'h6: flag[0] = z;
+      default: flag = 3'b00;
+    endcase
+  end
+
+  // Seperate ALU and effective address
+  assign alutomem = aluout;
+  assign alutowb = aluout;
+  // END OF EXECUTION STAGE
 
   // ALU
   // recieves src1 always

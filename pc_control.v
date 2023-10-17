@@ -41,7 +41,7 @@ module pc_control (input [1:0] bsig, input [2:0] C, input [9:0] I, input [2:0] F
   reg [15:0] out;
 
   carry_lookahead add_two(.sum(sum2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(0));
-  addsub_16bit add_opt(.sum(b_out), .overflow(ovfl_add), .a(sum2), .b(signext_imm), .mode(0));
+  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(sum2), .b(signext_imm), .mode(0));
 
   // case statement for branch signal
   // 00: no branch, 01: b, 10: br, 11: hlt

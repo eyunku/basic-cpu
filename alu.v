@@ -349,10 +349,10 @@ module carry_lookahead_4bit(a, b, cin, sum, cout, mode);
     // generate carry-out of whole module
     wire P, G;
     
-    assign P = p0 * p1 * p2 * p3;
-    assign G = g3 + g2 * p3 + g1 * p3 * p2 + g0 * p3 * p2 * p1;
+    assign P = p0 & p1 & p2 & p3;
+    assign G = g3 | (g2 & p3) | (g1 & p3 & p2) | (g0 & p3 & p2 & p1);
 
-    assign cout = G + P * cin;
+    assign cout = G | (P & cin);
 endmodule
 
 /**
@@ -366,25 +366,27 @@ module carry_lookahead(a, b, sum, overflow, mode);
     output[15:0] sum;
     output overflow;
 
+    wire[15:0] CLASum;
+
     // wire cx_y connects the carry out of module x to the carry in of module y
     wire c0_1;
     wire c1_2;
     wire c2_3;
 
-    carry_lookahead_4bit cla0(.a(a[3:0]), .b(b[3:0]), .cin(mode), .sum(sum[3:0]), .cout(c0_1), .mode(mode));
-    carry_lookahead_4bit cla1(.a(a[7:4]), .b(b[7:4]), .cin(c0_1), .sum(sum[7:4]), .cout(c1_2), .mode(mode));
-    carry_lookahead_4bit cla2(.a(a[11:8]), .b(b[11:8]), .cin(c1_2), .sum(sum[11:8]), .cout(c2_3), .mode(mode));
-    carry_lookahead_4bit cla3(.a(a[15:12]), .b(b[15:12]), .cin(c2_3), .sum(sum[15:12]), .cout(overflow), .mode(mode));
+    carry_lookahead_4bit cla0(.a(a[3:0]), .b(b[3:0]), .cin(mode), .sum(CLASum[3:0]), .cout(c0_1), .mode(mode));
+    carry_lookahead_4bit cla1(.a(a[7:4]), .b(b[7:4]), .cin(c0_1), .sum(CLASum[7:4]), .cout(c1_2), .mode(mode));
+    carry_lookahead_4bit cla2(.a(a[11:8]), .b(b[11:8]), .cin(c1_2), .sum(CLASum[11:8]), .cout(c2_3), .mode(mode));
+    carry_lookahead_4bit cla3(.a(a[15:12]), .b(b[15:12]), .cin(c2_3), .sum(CLASum[15:12]), .cout(overflow), .mode(mode));
 
-    // make sure arithmetic operation is saturated
-    wire[15:0] temp; // temporary sum storage
+    // // make sure arithmetic operation is saturated
+    wire[15:0] SATSum; // temporary sum storage
     wire[15:0] neg, pos; // largest negative and positive values
     assign neg = 16'h8000;
     assign pos = 16'h7fff;
 
     // if a is neg., b is neg., and output is pos.
-    assign temp = (a[15] & b[15] & ~sum[15]) ? neg : sum;
-    assign temp = (~a[15] & ~b[15] & sum[15]) ? pos : sum;
+    assign SATSum = (a[15] & b[15] & ~sum[15]) ? neg : CLASum;
+    assign SATSum = (~a[15] & ~b[15] & sum[15]) ? pos : CLASum;
 
-    assign sum = temp;
+    assign sum = SATSum;
 endmodule

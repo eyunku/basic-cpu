@@ -1,4 +1,4 @@
-module t_alu():
+module t_alu();
     reg[3:0] aluop;
     reg[15:0] aluin1, aluin2;
     wire[15:0] aluout;
@@ -39,13 +39,13 @@ module t_alu():
         // test ROR
         aluop = 4'h6; aluin1 = 16'h2222; aluin2 = 16'h0005;
         #10
-        $display("Expected value: xxxx w/ err 0. Calculated value: %h w/ err %b\n", aluout, err);
+        $display("Expected value: 1111 w/ err 0. Calculated value: %h w/ err %b\n", aluout, err);
         // test PADDSB
         aluop = 4'h7; aluin1 = 16'h1234; aluin2 = 16'h1234;
         #10
         $display("Expected value: 2468 w/ err 0. Calculated value: %h w/ err %b\n", aluout, err);
         // test LLB
-        aluop = 4'h8; aluin1 = 16'1111; aluin2 = 16'h8888;
+        aluop = 4'h8; aluin1 = 16'h1111; aluin2 = 16'h8888;
         #10
         $display("Expected value: 1188 w/ err 0. Calculated value: %h w/ err %b\n", aluout, err);
         // test LHB

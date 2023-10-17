@@ -53,6 +53,9 @@ module cpu (clk, rst_n, hlt, pc);
   
   // wire for MEMORY
   wire [15:0] mem;
+
+  // wire for PCS
+  wire [15:0] pcs;
   
   // FLAG REGISTER
   // TODO figure out write conditions, set it to clk?
@@ -61,7 +64,7 @@ module cpu (clk, rst_n, hlt, pc);
   // REGISTER
   assign DstReg = instruction[11:8];
   // Handling for LLB and LHB
-  assign SrcReg1 = (instruction[15:11] == 4'b1010 | instruction[15:11] == 4'b1011) ? DstReg : instruction[7:4];
+  assign SrcReg1 = ((instruction[15:11] == 4'b1010) | (instruction[15:11] == 4'b1011)) ? DstReg : instruction[7:4];
   assign SrcReg2 = instruction[3:0];
 
   RegisterFile registerfile (.clk(clk), .rst(rst_n), .SrcReg1(SrcReg1), .SrcReg2(SrcReg2), .DstReg(DstReg), .WriteReg(regwrite), .DstData(DstData), .SrcData1(SrcData1), .SrcData2(SrcData2));
@@ -74,14 +77,12 @@ module cpu (clk, rst_n, hlt, pc);
   assign C = instruction[11:9]; // get condition code from instruction
   assign F = {n_out, v_out, z_out};
 
-  // TODO add regsrc after completing decode
   // TODO figure out PCS
   pc_reg pc_reg (.clk(clk), .rst(rst_n), .pc_write(1), .pc_read(pcread), .pc_in(pc_in), .pc_out(pc_out));
   pc_control pc_control (.bsig(branch), .C(C), .I(I), .F(F), .regsrc(SrcReg1), .PC_in(pc_out), .PC_out(pc_in));
   // END OF PC REG + PC CONTROL
 
   // FETCH
-  // TODO figure out rst_n interaction with memory
   memory1c instruction_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
   // END OF FETCH
 
@@ -143,7 +144,8 @@ module cpu (clk, rst_n, hlt, pc);
   // END OF MEMORY STAGE
 
   // WRITEBACK STAGE
-  assign DstData = memtoreg ? mem : alutowb;
+  full_adder a0 (.a(pc_out), .b(16'h0002), .cin(0), .s(pcs));
+  assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
   // END OF WRITEBACK STAGE
 
   // stagewise status output

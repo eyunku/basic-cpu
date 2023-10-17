@@ -30,9 +30,8 @@ module cpu (clk, rst_n, hlt, pc);
 
   // wire for CONTROL UNIT
   wire [3:0] opcode;
-  wire regwrite, alusrc, memread, memwrite, memtoreg, pcread;
+  wire regwrite, alusrc, memread, memwrite, memtoreg, pcread, alusext;
   wire [1:0] branch;
-  wire [2:0] alusext;
   wire [3:0] aluop;
 
   // wire for DECODE
@@ -49,7 +48,7 @@ module cpu (clk, rst_n, hlt, pc);
 
   // wire for Flags in EXECUTION
   reg [2:0] flag;
-  wire n, z, v;
+  wire n_flag, z_flag, v_flag;
   
   // wire for MEMORY
   wire [15:0] mem;
@@ -77,7 +76,6 @@ module cpu (clk, rst_n, hlt, pc);
   assign C = instruction[11:9]; // get condition code from instruction
   assign F = {n_out, v_out, z_out};
 
-  // TODO figure out PCS
   pc_reg pc_reg (.clk(clk), .rst(rst_n), .pc_write(1), .pc_read(pcread), .pc_in(pc_in), .pc_out(pc_out));
   pc_control pc_control (.bsig(branch), .C(C), .I(I), .F(F), .regsrc(SrcReg1), .PC_in(pc_out), .PC_out(pc_in));
   // END OF PC REG + PC CONTROL
@@ -107,26 +105,26 @@ module cpu (clk, rst_n, hlt, pc);
   alu alu(.aluin1(aluin1), .aluin2(aluin2), .aluop(aluop), .aluout(aluout), .err(err));
   
   // Flags
-  assign n = aluout[15];
-  assign z = aluout == 16'h0000;
-  assign v = err;
+  assign n_flag = aluout[15];
+  assign z_flag = aluout == 16'h0000;
+  assign v_flag = err;
 
   always @(*) begin
     case(aluop)
       3'h0: begin
-        flag[0] = z;
-        flag[1] = v;
-        flag[2] = n;
+        flag[0] = z_flag;
+        flag[1] = v_flag;
+        flag[2] = n_flag;
       end
       3'h1: begin
-        flag[0] = z;
-        flag[1] = v;
-        flag[2] = n;
+        flag[0] = z_flag;
+        flag[1] = v_flag;
+        flag[2] = n_flag;
       end
-      3'h2: flag[0] = z;
-      3'h4: flag[0] = z;
-      3'h5: flag[0] = z;
-      3'h6: flag[0] = z;
+      3'h2: flag[0] = z_flag;
+      3'h4: flag[0] = z_flag;
+      3'h5: flag[0] = z_flag;
+      3'h6: flag[0] = z_flag;
       default: flag = 3'b00;
     endcase
   end

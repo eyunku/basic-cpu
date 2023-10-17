@@ -1,7 +1,7 @@
 // pc_control.v
 
 // pc contorl for all branch conditions
-module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F, input [15:0] regsrc, input [15:0] PC_in, output [15:0] PC_out);
+module pc_control (input [1:0] bsig, input [2:0] C, input [9:0] I, input [2:0] F, input [15:0] regsrc, input [15:0] PC_in, output [15:0] PC_out);
 
   // wires for all your diff branches
   reg truth;
@@ -15,6 +15,7 @@ module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F
   // 101 Less Than or Equal (N = 1 or Z = 1)
   // 110 Overflow (V = 1)
   // 111 Unconditional
+  // F = NVZ
 
   always @(*) begin
     case (C)
@@ -31,7 +32,7 @@ module pc_control (input [1:0] bsig, input [2:0] C, input [8:0] I, input [2:0] F
 
 
   wire [15:0] signext_imm;
-  assign signext_imm = I[8] ? {7'b1111111, I[8:0]} : {7'b0000000, I[8:0]};
+  assign signext_imm = I[9] ? {6'b111111, I[9:0]} : {6'b000000, I[9:0]};
 
   wire [15:0] sum2;
   wire [15:0] b_out;
@@ -107,28 +108,4 @@ output S, Cout;
 
 assign S = A ^ B ^ Cin;
 assign Cout = A & B | A & Cin | B & Cin;
-endmodule
-
-
-module test_bench_write_branch ();
-reg [2:0] c, f;
-reg signed [8:0] i;
-reg [1:0] signal;
-reg [15:0] data;
-reg [15:0] in;
-wire [15:0] OUT;
-
-pc_control dut (.bsig(signal), .C(c), .I(i), .F(f), .regsrc(data), .PC_in(in), .PC_out(OUT));
-
-initial begin
-signal = 2'b00; data = 16'hFFFF; c = 3'b101; f = 3'b100; i = 9'b000000010; in = 16'h0001; #10;
-$display("no branch output is %b", OUT);
-signal = 2'b01; data = 16'hFFFF; c = 3'b100; f = 3'b011; i = 9'b000000010; in = 16'h0001; #10;
-$display("branch output is %b", OUT);
-signal = 2'b10; data = 16'hFFFF; c = 3'b100; f = 3'b000; i = 9'b000000010; in = 16'h0001; #10;
-$display("branch with register output is %b", OUT);
-signal = 2'b11; data = 16'hFFFF; c = 3'b111; f = 3'b101; i = 9'b000000010; in = 16'h0001; #10;
-$display("halt signal, output is %b", OUT);
-$stop;
-end
 endmodule

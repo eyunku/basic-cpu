@@ -1,7 +1,6 @@
 module t_control();
     reg [3:0] opcode;
-    wire regwrite, alusrc, memread, memwrite, memtoreg, branch, pcread;
-    wire [2:0] alusext;
+    wire regwrite, alusrc, memread, memwrite, memtoreg, branch, pcread, alusext;
     wire [3:0] aluop;
 
     control dut (

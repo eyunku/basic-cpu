@@ -1,9 +1,7 @@
-// TODO is there a signal we want when aluop isn't in use?
-
 module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch, alusext, pcread);
     input [3:0] opcode;
-    output regwrite, alusrc, memread, memwrite, memtoreg, branch, pcread;
-    output [2:0] alusext;
+    output regwrite, alusrc, memread, memwrite, memtoreg, pcread, alusext;
+    output [1:0] branch;
     output [3:0] aluop;
 
     // RegWrite, determines if D is written to reg

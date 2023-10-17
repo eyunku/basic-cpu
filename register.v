@@ -122,70 +122,7 @@ module flag_reg (input clk, input rst, input n_write, input v_write, input z_wri
   assign z_out = z_read;
 endmodule
 
-module test_bench_flag ();
-reg nw, vw, zw, nn, vn, zn, clk, rst;
-wire n, v, z;
-
-flag_reg dut (.clk(clk), .rst(rst), .n_write(nw), .v_write(vw), .z_write(zw), .n_in(nn), .v_in(vn), .z_in(zn), .n_out(n), .v_out(v), .z_out(z));
-
-initial begin
-clk = 0;
-#5;
-rst = 1;
-nw = 1; vw = 1; zw = 1; nn = 1; vn = 1; zn = 1; #20;
-rst = 0;
-nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z);
-rst = 0;
-nw = 0; vw = 1; zw = 0; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z);
-rst = 0; 
-nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 0; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z);
-rst = 0; 
-nw = 1; vw = 0; zw = 0; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z);
-$stop;
-end
-
-always begin
-#10;
-clk = ~clk;
-end
-
-endmodule
-
-
-module test_bench_RF ();
-reg clk, rst, wr;
-reg [3:0] sr1, sr2, dr;
-reg [15:0] dd;
-wire [15:0] sd1, sd2;
-
-RegisterFile dut (.clk(clk), .rst(rst), .SrcReg1(sr1), .SrcReg2(sr2), .DstReg(dr), .WriteReg(wr), .DstData(dd), .SrcData1(sd1), .SrcData2(sd2));
-
-initial begin
-clk = 0;
-#5;
-rst = 1; sr1 = 4'hA; sr2 = 4'hA; #20;
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'hFACE; #20;
-$display("first write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'h1111; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'hFACE; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'h0; sr2 = 4'hA; wr = 1; dr = 4'h0; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'h0; sr2 = 4'h0; wr = 0; dr = 4'h0; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-$stop;
-end
-
-always begin
-#10;
-clk = ~clk;
-end
-
+module pc_reg (input clk, input rst, input pc_write, input pc_read, input [15:0] pc_in, output [15:0] pc_out);
+  wire [15:0] hanging;
+  Register pc (.clk(clk), .rst(rst), .D(pc_in), .WriteReg(pc_write), .ReadEnable1(pc_read), .ReadEnable2(0), .Bitline1(pc_out), .Bitline2(hanging));
 endmodule

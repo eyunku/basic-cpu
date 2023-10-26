@@ -81,7 +81,7 @@ module cpu (clk, rst_n, hlt, pc);
   // END OF PC REG + PC CONTROL
 
   // FETCH
-  memory1c instruction_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
+  instruction_memory instruction_mem (.data_out(instruction), .data_in(), .addr(pc_out), .enable(1), .wr(0), .clk(clk), .rst(rst_n));
   // END OF FETCH
 
   // CONTROL UNIT
@@ -138,7 +138,7 @@ module cpu (clk, rst_n, hlt, pc);
   // END OF EXECUTION STAGE
 
   // MEMORY STAGE
-  memory1c cpu_memory (.data_out(mem), .data_in(SrcData1), .addr(alutomem), .enable(memread | (opcode == 4'b1001)), .wr(memwrite), .clk(clk), .rst(rst_n));
+  main_memory cpu_memory (.data_out(mem), .data_in(SrcData1), .addr(alutomem), .enable(memread | (opcode == 4'b1001)), .wr(memwrite), .clk(clk), .rst(rst_n));
   // END OF MEMORY STAGE
 
   // WRITEBACK STAGE

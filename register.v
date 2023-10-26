@@ -1,3 +1,6 @@
+'include "goku_dff.v"
+// register.v
+
 module ReadDecoder_4_16(input [3:0] RegId, output [15:0] Wordline);
 wire b1;
 wire [8:0] b9;
@@ -35,24 +38,6 @@ dff thisreg (.q(w1), .d(D), .wen(WriteEnable), .clk(clk), .rst(rst));
 
 assign Bitline1 = ReadEnable1 ? w1: 1'bz;
 assign Bitline2 = ReadEnable2 ? w1: 1'bz;
-endmodule
-
-
-// Goku's D-flipflop
-module dff (q, d, wen, clk, rst);
-output q; //DFF output
-input d; //DFF input
-input wen; //Write Enable
-input clk; //Clock
-input rst; //Reset (used synchronously)
-
-reg state;
-
-assign q = state;
-
-always @(posedge clk) begin
-state = rst ? 0 : (wen ? d : state);
-end
 endmodule
 
 

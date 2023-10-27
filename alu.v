@@ -32,6 +32,7 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     wire[15:0] ADD, SUB, XOR, RED, SLL, SRA, ROR, PADDSB, LLB, LHB;
     wire ADDErr, SUBErr, XORErr, REDErr, SLLErr, SRAErr, RORErr, PADDSBErr, LLBErr, LHBErr;
 
+    // ALU operations
     carry_lookahead add(.a(aluin1), .b(aluin2), .sum(ADD), .overflow(ADDErr), .mode(1'b0));
     carry_lookahead sub(.a(aluin1), .b(aluin2), .sum(SUB), .overflow(SUBErr), .mode(1'b1));
     xorModule xorModule(.a(aluin1), .b(aluin2), .out(XOR)); assign XORErr = 0;
@@ -43,6 +44,7 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     llb llb(.in(aluin1), .imm(aluin2), .out(LLB)); assign LLBErr = 0;
     lhb lhb(.in(aluin1), .imm(aluin2), .out(LHB)); assign LHBErr = 0;
 
+    // TODO remove XOR, RED, SLL,...Err
     reg[15:0] out;
     reg tempErr;
     always @* begin
@@ -65,6 +67,7 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     assign err = tempErr;
 endmodule
 
+// TODO make implementation smarter
 module llb(in, imm, out);
   input[15:0] imm;
   input[15:0] in; 

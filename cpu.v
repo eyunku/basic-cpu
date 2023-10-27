@@ -105,10 +105,10 @@ module cpu (clk, rst_n, hlt, pc);
   alu alu(.aluin1(aluin1), .aluin2(aluin2), .aluop(aluop), .aluout(aluout), .err(err));
   
   // Flags
+  // TODO create a signal bit to indicate if ALUop caused a flag bit, avoid creating case statements like these 
   assign n_flag = aluout[15];
   assign z_flag = aluout == 16'h0000;
   assign v_flag = err;
-
   always @(*) begin
     case(aluop)
       3'h0: begin

@@ -1,3 +1,7 @@
+// TODO redo signals so that we don't need to hardcode each instruction for each signal
+// TODO red memread + memwrite, turns out memread is used as both a signal for memread and memwrite
+// TODO add in a signal for determining the SRC1 reg for LLB and LHB, 1 = set the src1 reg as the dst reg
+// 
 module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch, alusext, pcread);
     input [3:0] opcode;
     output regwrite, alusrc, memread, memwrite, memtoreg, pcread, alusext;

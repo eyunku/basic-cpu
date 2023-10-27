@@ -7,8 +7,9 @@
 // 
 
 module cpu (clk, rst_n, hlt, pc);
-  input clk, rst_n, hlt;
+  input clk, rst_n;
   output [15:0] pc;
+  output hlt;
 
   // wires for FLAG REGISTER
   wire n_in, v_in, z_in;
@@ -30,7 +31,7 @@ module cpu (clk, rst_n, hlt, pc);
 
   // wire for CONTROL UNIT
   wire [3:0] opcode;
-  wire regwrite, alusrc, memread, memwrite, memtoreg, pcread, alusext;
+  wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
   wire [1:0] branch;
   wire [3:0] aluop;
 
@@ -63,7 +64,7 @@ module cpu (clk, rst_n, hlt, pc);
   // REGISTER
   assign DstReg = instruction[11:8];
   // Handling for LLB and LHB
-  assign SrcReg1 = ((instruction[15:11] == 4'b1010) | (instruction[15:11] == 4'b1011)) ? DstReg : instruction[7:4];
+  assign SrcReg1 = rdsrc ? DstReg : instruction[7:4];
   assign SrcReg2 = instruction[3:0];
 
   RegisterFile registerfile (.clk(clk), .rst(rst_n), .SrcReg1(SrcReg1), .SrcReg2(SrcReg2), .DstReg(DstReg), .WriteReg(regwrite), .DstData(DstData), .SrcData1(SrcData1), .SrcData2(SrcData2));
@@ -85,7 +86,7 @@ module cpu (clk, rst_n, hlt, pc);
   // END OF FETCH
 
   // CONTROL UNIT
-  control control_unit (.opcode(opcode), .regwrite(regwrite), .alusrc(alusrc), .memread(memread), .memwrite(memwrite), .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .alusext(alusext), .pcread(pcread));
+  control control_unit (.opcode(opcode), .regwrite(regwrite), .alusrc(alusrc), .memenable(memenable), .memwrite(memwrite), .aluop(aluop), .memtoreg(memtoreg), .branch(branch), .alusext(alusext), .pcread(pcread), .rdsrc(rdsrc));
   // END OF CONTROL UNIT
 
   // DECODE STAGE
@@ -138,7 +139,7 @@ module cpu (clk, rst_n, hlt, pc);
   // END OF EXECUTION STAGE
 
   // MEMORY STAGE
-  main_memory cpu_memory (.data_out(mem), .data_in(SrcData1), .addr(alutomem), .enable(memread | (opcode == 4'b1001)), .wr(memwrite), .clk(clk), .rst(rst_n));
+  main_memory cpu_memory (.data_out(mem), .data_in(SrcData1), .addr(alutomem), .enable(memenable), .wr(memwrite), .clk(clk), .rst(rst_n));
   // END OF MEMORY STAGE
 
   // WRITEBACK STAGE

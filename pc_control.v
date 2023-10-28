@@ -1,9 +1,14 @@
 // pc_control.v
 
 // pc contorl for all branch conditions
-module pc_control (input [1:0] bsig, input [2:0] C, input [9:0] I, input [2:0] F, input [15:0] regsrc, input [15:0] PC_in, output [15:0] PC_out);
+module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
+  input [1:0] bsig; // 00 = PC + 2, 01 = PC + 2 + I, 10 = regsrc, 11 = HLT
+  input [2:0] C, F; // C ccc, F flag reg
+  input [9:0] I; // I immediate
+  input [15:0] regsrc, PC_in; // regsrc rs reg, PC_in curr PC
+  output [15:0] PC_out; // PC_out updated PC
 
-  // wires for all your diff branches
+  // Can branch? (ccc is fufilled)
   reg truth;
 
   // ternary for deciding which branch instruction

@@ -122,7 +122,7 @@ module flag_reg (input clk, input rst, input n_write, input v_write, input z_wri
   assign z_out = z_read;
 endmodule
 
-module pc_reg (input clk, input rst, input pc_write, input pc_read, input [15:0] pc_in, output [15:0] pc_out);
+module pc_reg (input clk, input rst, input [15:0] pc_in, output [15:0] pc_out);
   wire [15:0] hanging;
-  Register pc (.clk(clk), .rst(rst), .D(pc_in), .WriteReg(pc_write), .ReadEnable1(pc_read), .ReadEnable2(0), .Bitline1(pc_out), .Bitline2(hanging));
+  Register pc (.clk(clk), .rst(rst), .D(pc_in), .WriteReg(1), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(pc_out), .Bitline2(hanging));
 endmodule

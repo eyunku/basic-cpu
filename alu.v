@@ -32,9 +32,10 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     wire[15:0] ADD, SUB, XOR, RED, SLL, SRA, ROR, PADDSB, LLB, LHB;
     wire ADDErr, SUBErr, XORErr, REDErr, SLLErr, SRAErr, RORErr, PADDSBErr, LLBErr, LHBErr;
 
-    carry_lookahead add(.a(aluin1), .b(aluin2), .sum(ADD), .overflow(ADDErr), .mode(0));
-    carry_lookahead sub(.a(aluin1), .b(aluin2), .sum(SUB), .overflow(SUBErr), .mode(1));
-    xor xor(.a(aluin1), .b(aluin2), .out(XOR)); assign XORErr = 0;
+    // ALU operations
+    carry_lookahead add(.a(aluin1), .b(aluin2), .sum(ADD), .overflow(ADDErr), .mode(1'b0));
+    carry_lookahead sub(.a(aluin1), .b(aluin2), .sum(SUB), .overflow(SUBErr), .mode(1'b1));
+    xorModule xorModule(.a(aluin1), .b(aluin2), .out(XOR)); assign XORErr = 0;
     red red(.in1(aluin1), .in2(aluin2), .out(RED)); assign REDErr = 0;
     sll sll(.shift_amount(aluin2[3:0]), .value(aluin1), .out(SLL)); assign SLLErr = 0;
     sra sra(.shift_amount(aluin2[3:0]), .value(aluin1), .out(SRA)); assign SRAErr = 0;
@@ -43,6 +44,7 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     llb llb(.in(aluin1), .imm(aluin2), .out(LLB)); assign LLBErr = 0;
     lhb lhb(.in(aluin1), .imm(aluin2), .out(LHB)); assign LHBErr = 0;
 
+    // TODO remove XOR, RED, SLL,...Err
     reg[15:0] out;
     reg tempErr;
     always @* begin
@@ -65,6 +67,7 @@ module alu (aluin1, aluin2, aluop, aluout, err);
     assign err = tempErr;
 endmodule
 
+// TODO make implementation smarter
 module llb(in, imm, out);
   input[15:0] imm;
   input[15:0] in; 
@@ -131,7 +134,6 @@ module sll (input [3:0] shift_amount, input [15:0] value, output [15:0] out);
     assign out = shift[4] ? {stage2[6:0], 9'b000000000} : stage2;
 endmodule
 
-
 module sra (input [3:0] shift_amount, input [15:0] value, output [15:0] out);
     // base 3 wires
     wire [4:0] shift;
@@ -154,7 +156,6 @@ module sra (input [3:0] shift_amount, input [15:0] value, output [15:0] out);
     // shift left by 5:4
     assign out = shift[4] ? {s, s, s, s, s, s, s, s, s, stage2[15:9]} : stage2;
 endmodule
-
 
 module ror(input [3:0] shift_amount, input [15:0] value, output [15:0] out);
     // base 3 wires
@@ -210,7 +211,7 @@ endmodule
 /**
 * Applies xor onto two inputs.
 **/
-module xor(a, b, out);
+module xorModule(a, b, out);
     input [15:0] a, b;
     output [15:0] out;
 
@@ -221,7 +222,7 @@ endmodule
 /**
 * Does four half-byte additions in parallel
 **/
-module paddsb(a, b, out):
+module paddsb(a, b, out);
     input [15:0] a, b;
     output [15:0] out;
 
@@ -233,10 +234,10 @@ module paddsb(a, b, out):
     wire [3:0] S1, S2, S3, S4;
 
     // Performs 4-bit parallel addition
-    add_4bit_cla p0 (.a(a[3:0]), .b(b[3:0]), .s(C1), .cin(0), .overflow(E1));
-    add_4bit_cla p1 (.a(a[7:4]), .b(b[7:4]), .s(C2), .cin(0), .overflow(E2));
-    add_4bit_cla p2 (.a(a[11:8]), .b(b[11:8]), .s(C3), .cin(0), .overflow(E3));
-    add_4bit_cla p3 (.a(a[15:12]), .b(b[15:12]), .s(C4), .cin(0), .overflow(E4));
+    carry_lookahead_4bit p0 (.a(a[3:0]), .b(b[3:0]), .sum(C1), .cin(1'b0), .cout(E1), .mode(1'b0));
+    carry_lookahead_4bit p1 (.a(a[7:4]), .b(b[7:4]), .sum(C2), .cin(1'b0), .cout(E2), .mode(1'b0));
+    carry_lookahead_4bit p2 (.a(a[11:8]), .b(b[11:8]), .sum(C3), .cin(1'b0), .cout(E3), .mode(1'b0));
+    carry_lookahead_4bit p3 (.a(a[15:12]), .b(b[15:12]), .sum(C4), .cin(1'b0), .cout(E4), .mode(1'b0));
 
     // Arithmetic saturation
     assign S1 = E1 ? (C1[3] ? 4'b0111 : 4'b1001) : C1;
@@ -247,47 +248,37 @@ module paddsb(a, b, out):
     assign out = {S4, S3, S2, S1};
 endmodule
 
-module red(in1, in2, out):
+module red(in1, in2, out);
     input[15:0] in1, in2;
     output[15:0] out;
 
     // wires to hold the portions of the inputs
     wire[3:0] a1, a2, b1, b2, c1, c2, d1, d2;
-    a2[3] = in1[15];
-    a2[2] = in1[14];
-    a2[1] = in1[13];
-    a2[0] = in1[12];
-    a1[3] = in1[11];
-    a1[2] = in1[10];
-    a1[1] = in1[9];
-    a1[0] = in1[8];
-    b2[3] = in1[7];
-    b2[2] = in1[6];
-    b2[1] = in1[5];
-    b2[0] = in1[4];
-    b1[3] = in1[3];
-    b1[2] = in1[2];
-    b1[1] = in1[1];
-    b1[0] = in1[0];
-    c2[3] = in2[15];
-    c2[2] = in2[14];
-    c2[1] = in2[13];
-    c2[0] = in2[12];
-    c1[3] = in2[11];
-    c1[2] = in2[10];
-    c1[1] = in2[9];
-    c1[0] = in2[8];
-    d2[3] = in2[7];
-    d2[2] = in2[6];
-    d2[1] = in2[5];
-    d2[0] = in2[4];
-    d1[3] = in2[3];
-    d1[2] = in2[2];
-    d1[1] = in2[1];
-    d1[0] = in2[0];
-
-    wire[7:0] temp;
+    assign a2[3:0] = in1[15:12];
+    assign a1[3:0] = in1[11:8];
+    assign b2[3:0] = in1[7:4];
+    assign b1[3:0] = in1[3:0];
+    assign c2[3:0] = in2[15:12];
+    assign c1[3:0] = in2[11:8];
+    assign d2[3:0] = in2[7:4];
+    assign d1[3:0] = in2[3:0];
     
+    // add A + C and B + D
+    wire[8:0] AC, BD;
+    wire cAC, cBD, ACOverflow, BDOverflow;
+    carry_lookahead_4bit ACAdderLow(.a(a1), .b(c1), .cin(1'b0), .sum(AC[3:0]), .cout(cAC), .mode(1'b0));
+    carry_lookahead_4bit ACAdderHigh(.a(a2), .b(c2), .cin(cAC), .sum(AC[7:4]), .cout(ACOverflow), .mode(1'b0));
+    carry_lookahead_4bit BDAdderLow(.a(b1), .b(d1), .cin(1'b0), .sum(BD[3:0]), .cout(cBD), .mode(1'b0));
+    carry_lookahead_4bit BDAdderHigh(.a(b2), .b(d2), .cin(cBD), .sum(BD[7:4]), .cout(BDOverflow), .mode(1'b0));
+    assign AC[8] = ACOverflow;
+    assign BD[8] = BDOverflow;
+    // zero extend to be able to use 16-bit CLA
+    wire[15:0] ZEXTAC, ZEXTBD, tempOut;
+    wire REDOverflow;
+    assign ZEXTAC = {7'b0000000, AC}; assign ZEXTBD = {7'b0000000, BD};
+    carry_lookahead RED(.a(ZEXTAC), .b(ZEXTBD), .sum(tempOut), .overflow(REDOverflow), .mode(1'b0));
+    assign tempOut[9] = REDOverflow;
+    assign out = REDOverflow ? {6'b111111, tempOut} : {6'b000000, tempOut};
 endmodule
 
 /**
@@ -361,10 +352,10 @@ module carry_lookahead_4bit(a, b, cin, sum, cout, mode);
     // generate carry-out of whole module
     wire P, G;
     
-    assign P = p0 * p1 * p2 * p3;
-    assign G = g3 + g2 * p3 + g1 * p3 * p2 + g0 * p3 * p2 * p1;
+    assign P = p0 & p1 & p2 & p3;
+    assign G = g3 | (g2 & p3) | (g1 & p3 & p2) | (g0 & p3 & p2 & p1);
 
-    assign cout = G + P * cin;
+    assign cout = G | (P & cin);
 endmodule
 
 /**
@@ -378,25 +369,27 @@ module carry_lookahead(a, b, sum, overflow, mode);
     output[15:0] sum;
     output overflow;
 
+    wire[15:0] CLASum;
+
     // wire cx_y connects the carry out of module x to the carry in of module y
     wire c0_1;
     wire c1_2;
     wire c2_3;
 
-    carry_lookahead_4bit cla0(.a(a[3:0]), .b(b[3:0]), .cin(mode), .sum(sum[3:0]), .cout(c0_1), .mode(mode));
-    carry_lookahead_4bit cla1(.a(a[7:4]), .b(b[7:4]), .cin(c0_1), .sum(sum[7:4]), .cout(c1_2), .mode(mode));
-    carry_lookahead_4bit cla2(.a(a[11:8]), .b(b[11:8]), .cin(c1_2), .sum(sum[11:8]), .cout(c2_3), .mode(mode));
-    carry_lookahead_4bit cla3(.a(a[15:12]), .b(b[15:12]), .cin(c2_3), .sum(sum[15:12]), .cout(overflow), .mode(mode));
+    carry_lookahead_4bit cla0(.a(a[3:0]), .b(b[3:0]), .cin(mode), .sum(CLASum[3:0]), .cout(c0_1), .mode(mode));
+    carry_lookahead_4bit cla1(.a(a[7:4]), .b(b[7:4]), .cin(c0_1), .sum(CLASum[7:4]), .cout(c1_2), .mode(mode));
+    carry_lookahead_4bit cla2(.a(a[11:8]), .b(b[11:8]), .cin(c1_2), .sum(CLASum[11:8]), .cout(c2_3), .mode(mode));
+    carry_lookahead_4bit cla3(.a(a[15:12]), .b(b[15:12]), .cin(c2_3), .sum(CLASum[15:12]), .cout(overflow), .mode(mode));
 
-    // make sure arithmetic operation is saturated
-    wire[15:0] temp; // temporary sum storage
+    // // make sure arithmetic operation is saturated
+    wire[15:0] SATSum; // temporary sum storage
     wire[15:0] neg, pos; // largest negative and positive values
     assign neg = 16'h8000;
     assign pos = 16'h7fff;
 
     // if a is neg., b is neg., and output is pos.
-    assign temp = (a[15] & b[15] & ~sum[15]) ? neg : sum;
-    assign temp = (~a[15] & ~b[15] & sum[15]) ? pos : sum;
+    assign SATSum = (a[15] & b[15] & ~sum[15]) ? neg : CLASum;
+    assign SATSum = (~a[15] & ~b[15] & sum[15]) ? pos : CLASum;
 
-    assign sum = temp;
+    assign sum = SATSum;
 endmodule

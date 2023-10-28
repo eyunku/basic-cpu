@@ -1,9 +1,9 @@
-// TODO is there a signal we want when aluop isn't in use?
-
-module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, branch, alusext, pcread);
+// TODO redo signals so that we don't need to hardcode each instruction for each signal
+// TODO consider adding an additional signal that flips src1 and src2 for LHB, only need a single module now for doing both LLB and LHB
+module control(opcode, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, branch, alusext, pcread, rdsrc);
     input [3:0] opcode;
-    output regwrite, alusrc, memread, memwrite, memtoreg, branch, pcread;
-    output [2:0] alusext;
+    output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
+    output [1:0] branch;
     output [3:0] aluop;
 
     // RegWrite, determines if D is written to reg
@@ -16,9 +16,9 @@ module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, bra
                     (opcode == 4'b1000) | (opcode == 4'b1001) |
                     (opcode == 4'b1010) | (opcode == 4'b1011);
 
-    // MemRead, effective address is used to read content from meme
-    // 1 = use effective address to read from mem, 0 = do not read from mem
-    assign memread = opcode == 4'b1000;
+    // MemEnable, enables read or write
+    // 1 = read or write, 0 = do not read or write mem
+    assign memenable = (opcode == 4'b1000) | (opcode == 4'b1001);
 
     // MemWrite, store register content into the effective register
     // 1 = write to meme, 0 = do not write to mem
@@ -52,7 +52,11 @@ module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, bra
     // 0 = sign extend from [3:0], 1 = sign extend from [7:0]
     assign alusext = opcode[3:1] == 3'b101;
 
-    // PCRead, determines if rd is reading from PC
+    // PCRead (Signal specific to PCS), determines if rd is reading from PC
     // 0 = rd is set to high impedence, 1 = rd is set to PC
     assign pcread = opcode == 4'b1110;
+
+    // RDSrc (Signal specific to LLB and LHB), determines if rd is read through as a src reg
+    // 0 = rd is not passed as src, 1 = rd is passed as src
+    assign rdsrc = (opcode == 4'b1010) | (opcode == 4'b1011);
 endmodule

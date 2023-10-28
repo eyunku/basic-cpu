@@ -39,9 +39,6 @@ module cpu (clk, rst_n, hlt, pc);
     wire n_in, v_in, z_in;
     wire n_out, v_out, z_out;
 
-    // wires for flag assignment
-    wire n_flag, z_flag, v_flag;
-
     // wires for MEMORY
     wire [15:0] mem;
 
@@ -154,13 +151,9 @@ module cpu (clk, rst_n, hlt, pc);
 
     // Update flags
     // TODO make this a signal
-    assign n_flag = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : n_out;
-    assign v_flag = (aluop == 3'h1 | aluop == 3'h0) ? err : v_out;
-    assign z_flag = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : z_out;
-
-    assign n_in = n_flag;
-    assign v_in = v_flag;
-    assign z_in = z_flag;
+    assign n_in = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : n_out;
+    assign v_in = (aluop == 3'h1 | aluop == 3'h0) ? err : v_out;
+    assign z_in = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : z_out;
     // END OF EXECUTION
 
     // MEMORY

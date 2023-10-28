@@ -52,7 +52,6 @@ module pc_control (input [1:0] bsig, input [2:0] C, input [9:0] I, input [2:0] F
       2'b01: out = truth ? b_out: sum2;
       2'b10: out = truth ? regsrc: sum2;
       2'b11: out = PC_in;
-      default: out = 16'bz;
     endcase
   end
   

@@ -44,7 +44,7 @@ module control(opcode, regwrite, alusrc, memread, memwrite, aluop, memtoreg, bra
     // 0 = PC + 2, 1 = (PC + 2) + imm, 2 = rs, 3 = x (halt)
     assign branch = (opcode == 4'b1100) ? 2'b01 :
                     (opcode == 4'b1101) ? 2'b10 :
-                    (opcode == 4'b1111) ? 2'b11 : 2'b0;
+                    (opcode == 4'b1111) ? 2'b11 : 2'b00;
 
     // ALUSext, determines how many bits the imm is sign extended
     // 0 = sign extend from [3:0], 1 = sign extend from [7:0]

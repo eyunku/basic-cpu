@@ -204,10 +204,10 @@ module cpu_tb();
    assign WriteData = DUT.DstData;
    // Data being written to the register. (16 bits)
    
-   assign MemRead =  DUT.memread;
+   assign MemRead =  DUT.memenable;
    // Is memory being read, one bit signal (1 means yes, 0 means no)
    
-   assign MemWrite = ((DUT.memread | DUT.opcode == 4'b1001) & DUT.memwrite);
+   assign MemWrite = (DUT.memenable & DUT.memwrite);
    // Is memory being written to (1 bit signal)
    
    assign MemAddress = DUT.alutomem;

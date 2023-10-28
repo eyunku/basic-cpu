@@ -49,7 +49,7 @@ module cpu (clk, rst_n, hlt, pc);
 
   // wire for Flags in EXECUTION
   reg [2:0] flag;
-  wire n_flag, z_flag, v_flag;
+  reg [2:0] flag_out;
   
   // wire for MEMORY
   wire [15:0] mem;
@@ -59,7 +59,7 @@ module cpu (clk, rst_n, hlt, pc);
   
   // FLAG REGISTER
   // TODO figure out write conditions, set it to clk?
-  flag_reg FLAG (.clk(clk), .rst(rst_n), .n_write(1), .v_write(1), .z_write(1),  .n_in(n_in),  .v_in(v_in),  .z_in(z_in),  .n_out(n_out),  .v_out(v_out),  .z_out(z_out));
+  flag_reg FLAG (.clk(clk), .rst(rst_n), .write(3'b111),  .in(flag),  .flag_out(flag_out));
 
   // REGISTER
   assign DstReg = instruction[11:8];

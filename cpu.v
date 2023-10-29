@@ -143,11 +143,11 @@ module cpu (clk, rst_n, hlt, pc);
         .flag_out(flag_out)
     );
 
-    // Update flags
+    // Update flags (flag = NVZ)
     // TODO make this a signal
-    assign flag_in[2] = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : flag_out[0];
+    assign flag_in[2] = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : flag_out[2];
     assign flag_in[1] = (aluop == 3'h1 | aluop == 3'h0) ? err : flag_out[1];
-    assign flag_in[0] = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[2];
+    assign flag_in[0] = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[0];
     // END OF EXECUTION
 
     // MEMORY

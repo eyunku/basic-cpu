@@ -53,6 +53,7 @@ module instruction_memory (data_out, data_in, addr, enable, wr, clk, rst);
          //load loadfile_all.img
          if (!loaded) begin
             $readmemh("instruction.img", mem);
+            $display("reading from instruction.img\n");            
             loaded = 1;
          end
           
@@ -90,6 +91,7 @@ module main_memory (data_out, data_in, addr, enable, wr, clk, rst);
          //load loadfile_all.img
          if (!loaded) begin
             $readmemh("memory.img", mem);
+            $display("reading from memory.img\n");
             loaded = 1;
          end
           

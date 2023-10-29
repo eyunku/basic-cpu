@@ -81,6 +81,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     // set hlt bit
     assign hlt = branch == 2'b11;
+    assign pc = pc_out;
     // END OF CONTROL UNIT
 
     // DECODE
@@ -169,4 +170,6 @@ module cpu (clk, rst_n, hlt, pc);
     full_adder a0 (.a(pc_out), .b(16'h0002), .cin(0), .s(pcs));
     assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
+
+
 endmodule

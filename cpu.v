@@ -36,8 +36,8 @@ module cpu (clk, rst_n, hlt, pc);
     wire err;
 
     // wires for flag reg
-    wire n_in, v_in, z_in;
-    wire n_out, v_out, z_out;
+    wire [2:0] flag_in;
+    wire [2:0] flag_out;
 
     // wires for MEMORY
     wire [15:0] mem;
@@ -138,22 +138,16 @@ module cpu (clk, rst_n, hlt, pc);
     flag_reg FLAG (
         .clk(clk), 
         .rst(rst_n), 
-        .n_write(1), 
-        .v_write(1), 
-        .z_write(1),  
-        .n_in(n_in),  
-        .v_in(v_in), 
-        .z_in(z_in),  
-        .n_out(n_out),  
-        .v_out(v_out),  
-        .z_out(z_out)
+        .write(3'b111), 
+        .in(flag_in), 
+        .flag_out(flag_out)
     );
 
     // Update flags
     // TODO make this a signal
-    assign n_in = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : n_out;
-    assign v_in = (aluop == 3'h1 | aluop == 3'h0) ? err : v_out;
-    assign z_in = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : z_out;
+    assign flag_in[2] n_in = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : n_out;
+    assign flag_in[1] v_in = (aluop == 3'h1 | aluop == 3'h0) ? err : v_out;
+    assign flag_in[0] z_in = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : z_out;
     // END OF EXECUTION
 
     // MEMORY

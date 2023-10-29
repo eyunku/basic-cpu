@@ -1,5 +1,5 @@
 module test_bench_flag ();
-  reg [2:0], write, in;
+  reg [2:0] write, in;
   reg clk, rst;
   wire [2:0] nvz;
 

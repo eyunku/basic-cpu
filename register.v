@@ -1,4 +1,3 @@
-'include "dff.v"
 // register.v
 
 module ReadDecoder_4_16(input [3:0] RegId, output [15:0] Wordline);
@@ -91,20 +90,6 @@ Register rc (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable
 Register rd (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[13]), .ReadEnable2(w_ren2[13]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 Register re (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[14]), .ReadEnable2(w_ren2[14]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 Register rf (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[15]), .ReadEnable2(w_ren2[15]), .Bitline1(SrcData1), .Bitline2(SrcData2));
-endmodule
-
-// flag register containing 3 bitcell registers
-module flag_reg (input clk, input rst, input n_write, input v_write, input z_write, input n_in, input v_in, input z_in, output n_out, output v_out, output z_out);
-  wire n_read;
-  wire v_read;
-  wire z_read;
-  BitCell bitn (.clk(clk), .rst(rst), .D(n_in), .WriteEnable(n_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(n_read), .Bitline2());
-  BitCell bitv (.clk(clk), .rst(rst), .D(v_in), .WriteEnable(v_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(v_read), .Bitline2());
-  BitCell bitz (.clk(clk), .rst(rst), .D(z_in), .WriteEnable(z_write), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(z_read), .Bitline2());
-  
-  assign n_out = n_read;
-  assign v_out = v_read;
-  assign z_out = z_read;
 endmodule
 
 module pc_reg (input clk, input rst, input [15:0] pc_in, output [15:0] pc_out);

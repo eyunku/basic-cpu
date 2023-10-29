@@ -6,6 +6,8 @@ module t_pc_reg ();
   pc_reg dut (
     .clk(clk),
     .rst(rst),
+    .pc_write(pc_write),
+    .pc_read(pc_read),
     .pc_in(pc_in),
     .pc_out(pc_out)
   );
@@ -14,14 +16,14 @@ module t_pc_reg ();
     clk = 0;
     #5;
     rst = 1;
-    pc_in = 16'b0; #20
+    pc_write = 0; pc_read = 1; pc_in = 16'b0; #20
     rst = 0;
     $display("pc_out should be 16'bx: %b", pc_out);
-    pc_in = 16'h1111; #20
+    pc_write = 1; pc_read = 0; pc_in = 16'h1111; #20
     rst = 0;
     $display("pc_out should be 16'bz: %b", pc_out);
-    pc_in = 16'h2222; #20
-    rst = 0;
+    pc_write = 0; pc_read = 1; pc_in = 16'h2222; #20
+    rst = 0; 
     $display("pc_out 16'h1111: %b", pc_out);
   end
 

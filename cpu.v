@@ -109,7 +109,7 @@ module cpu (clk, rst_n, hlt, pc);
     // PC control
     assign C = instruction[11:9];
     assign I = instruction[8:0] << 1;
-    assign F = {n_out, v_out, z_out};
+    assign F = flag_out;
 
     pc_control pc_control (
         .bsig(branch), 
@@ -145,9 +145,9 @@ module cpu (clk, rst_n, hlt, pc);
 
     // Update flags
     // TODO make this a signal
-    assign flag_in[2] n_in = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : n_out;
-    assign flag_in[1] v_in = (aluop == 3'h1 | aluop == 3'h0) ? err : v_out;
-    assign flag_in[0] z_in = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : z_out;
+    assign flag_in[2] = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : flag_out[0];
+    assign flag_in[1] = (aluop == 3'h1 | aluop == 3'h0) ? err : flag_out[1];
+    assign flag_in[0] = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[2];
     // END OF EXECUTION
 
     // MEMORY

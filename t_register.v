@@ -3,7 +3,7 @@ module t_pc_reg ();
   reg [15:0] pc_in;
   wire [15:0] pc_out;
 
-  pc_reg dut (
+  pc_16bit_reg dut (
     .clk(clk),
     .rst(rst),
     .pc_in(pc_in),
@@ -30,40 +30,6 @@ module t_pc_reg ();
     clk = ~clk;
   end
 endmodule
-
-module test_bench_flag ();
-reg nw, vw, zw, nn, vn, zn, clk, rst;
-wire n_flag, v_flag, z_flag;
-
-flag_reg dut (.clk(clk), .rst(rst), .n_write(nw), .v_write(vw), .z_write(zw), .n_in(nn), .v_in(vn), .z_in(zn), .n_out(n), .v_out(v), .z_out(z_flag));
-
-initial begin
-clk = 0;
-#5;
-rst = 1;
-nw = 1; vw = 1; zw = 1; nn = 1; vn = 1; zn = 1; #20;
-rst = 0;
-nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z_flag);
-rst = 0;
-nw = 0; vw = 1; zw = 0; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z_flag);
-rst = 0; 
-nw = 0; vw = 0; zw = 1; nn = 1; vn = 1; zn = 0; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z_flag);
-rst = 0; 
-nw = 1; vw = 0; zw = 0; nn = 1; vn = 1; zn = 1; #20;
-$display("after setting zero bit, flag is %b %b %b", n, v, z_flag);
-$stop;
-end
-
-always begin
-#10;
-clk = ~clk;
-end
-
-endmodule
-
 
 module test_bench_RF ();
 reg clk, rst, wr;

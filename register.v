@@ -92,8 +92,3 @@ Register rd (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable
 Register re (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[14]), .ReadEnable2(w_ren2[14]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 Register rf (.clk(clk), .rst(rst), .D(DstData), .WriteReg(WriteReg), .ReadEnable1(w_ren1[15]), .ReadEnable2(w_ren2[15]), .Bitline1(SrcData1), .Bitline2(SrcData2));
 endmodule
-
-module pc_reg (input clk, input rst, input [15:0] pc_in, output [15:0] pc_out);
-  wire [15:0] hanging;
-  Register pc (.clk(clk), .rst(rst), .D(pc_in), .WriteReg(1), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(pc_out), .Bitline2(hanging));
-endmodule

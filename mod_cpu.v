@@ -8,6 +8,9 @@ module cpu_(clk, rst_n, hlt, pc);
     output [15:0] pc;
     output hlt;
 
+    // flip reset register
+    wire rst = ~rst_n;
+
 
     // IF/ID wires
     wire [15:0] pc_curr;
@@ -16,15 +19,12 @@ module cpu_(clk, rst_n, hlt, pc);
     // ID/EX wires
     wire [3:0] SrcReg1, SrcReg2, DstReg;
     wire [15:0] DstData, SrcData1, SrcData2;
-    // control unit
-    wire [3:0] opcode;
+    // control signals
     wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
     wire [1:0] branch;
     wire [3:0] aluop;
     // sext
-    wire [15:0] imm_4bit;
-    wire [15:0] imm_8bit;
-    wire [15:0] imm_16bit;
+    wire [15:0] sextimm;
 
     // EX/MEM wires
     wire [15:0] aluout, alutomem, alutowb;
@@ -42,12 +42,10 @@ module cpu_(clk, rst_n, hlt, pc);
     IF fetch(
         //inputs
         .clk(clk),
-        .rst(rst_n),
-        .C(C),
-        .I(I),
-        .F(F),
+        .rst(rst),
         .br_sig(branch),
         .SrcData1(SrcData1),
+        .flag_bits(flag_bits),
         //outputs
         .pc_out(pc_curr),
         .instruction(instruction),
@@ -57,17 +55,15 @@ module cpu_(clk, rst_n, hlt, pc);
     // DECODE STAGE
     ID decode(
         //inputs
+        .clk(clk),
+        .rst(rst),
         .pc_curr(pc_curr),
         .instruction(instruction),
         //outputs
-        .SrcReg1(SrcReg1),
-        .SrcReg2(SrcReg2),
-        .DstReg(DstReg),
         .SrcData1(SrcData1),
         .SrcData2(SrcData2),
-        .DstData(DstData),
+        .sextimm(sextimm),
         //control signal outputs
-        .opcode(opcode), 
         .regwrite(regwrite), 
         .alusrc(alusrc), 
         .memenable(memenable), 
@@ -78,10 +74,6 @@ module cpu_(clk, rst_n, hlt, pc);
         .alusext(alusext), 
         .pcread(pcread), 
         .rdsrc(rdsrc),
-        // sext
-        .imm4bit(imm_4bit),
-        .imm8bit(imm_8bit),
-        .imm16bit(imm_16bit),
     );
 
     // EXECUTION

@@ -1,6 +1,6 @@
 // special pc 16bit register
 
-module pc_16bit_reg (input clk, input rst, input [15:0] pc_in, output [15:0] pc_out);
+module pc_16bit_reg (clk, rst, pc_in, pc_out);
     // input
     input clk, rst;
     input [15:0] pc_in;

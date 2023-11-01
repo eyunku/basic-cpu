@@ -127,8 +127,8 @@ module cpu (clk, rst_n, hlt, pc);
 
     // TODO will need to determine placement of flag register in stages
     // EXECUTION
-    assign aluin1 = SrcReg1;
-    assign aluin2 = alusrc ? imm_16bit : SrcReg2;
+    assign aluin1 = SrcData1;
+    assign aluin2 = alusrc ? imm_16bit : SrcData2;
 
     alu alu(
         .aluin1(aluin1), 
@@ -169,7 +169,6 @@ module cpu (clk, rst_n, hlt, pc);
     // END OF MEMORY
     
     // WRITEBACK
-    full_adder a0 (.a(pc_out), .b(16'h0002), .cin(0), .s(pcs));
     assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
 

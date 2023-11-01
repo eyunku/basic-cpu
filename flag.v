@@ -1,7 +1,7 @@
 // flag.v
 
 // flag register containing 3 dff registers
-module flag_reg (input clk, input rst, input [2:0] write, input [2:0] in, output [2:0] flag_out);
+module flag_reg (clk, rst, write, in, flag_out);
   // input
   input clk, rst;
   input [2:0] write, in;

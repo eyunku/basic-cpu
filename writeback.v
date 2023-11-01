@@ -6,7 +6,7 @@ module WB (pcread, memtoreg, alutowb, mem_out, pc_curr, DstData);
     input [15:0] mem_out, pc_curr;
 
     // output
-    output DstData;
+    output [15:0] DstData;
 
 
     //wire

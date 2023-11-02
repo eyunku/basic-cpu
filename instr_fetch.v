@@ -1,6 +1,6 @@
 // instruction fetch stage
 
-module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction, opcode);
+module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction);
     //inputs
     input clk, rst;
     input [1:0] br_sig;
@@ -8,18 +8,14 @@ module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction, opcode);
     input [2:0] flag_bits;
     //outputs
     output [15:0] pc_out, instruction;
-    output [3:0] opcode;
 
 // wire
     wire [15:0] pc_next;
-    assign opcode = instruction [15:12];
 
 // pc control wires
-    wire [2:0] C, F;
-    wire [9:0] I;
-    assign C = instruction[11:9];
-    assign I = {instruction[7:0], 1'b0}; // i dont think we can use this
-    assign F = flag_bits;
+    wire [2:0] C = instruction[11:9];
+    wire [2:0] F = flag_bits;
+    wire [9:0] I = {instruction[7:0], 1'b0}; // i dont think we can use this
     
 
 // PC register

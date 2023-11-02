@@ -1,7 +1,8 @@
-module t_decode ();
+module test_bench_flag ();
     reg clk, rst;
-    reg [15:0] instruction, DstData;
-    wire [15:0] SrcData1, SrcData2;
+    reg [15:0] instruction, pc_curr;
+    wire [15:0] SrcData1, Srcdata2;
+    wire [3:0] opcode;
     wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
     wire [3:0] aluop;
     wire [1:0] branch;
@@ -10,8 +11,8 @@ module t_decode ();
         //inputs
         .clk(clk),
         .rst(rst),
+        .pc_curr(pc_curr),
         .instruction(instruction),
-        .DstData(DstData),
         //outputs
         .SrcData1(SrcData1),
         .SrcData2(SrcData2),
@@ -33,19 +34,23 @@ module t_decode ();
     clk = 0;
     #5;
     rst = 1;
-    instruction = 16'hAAAA; DstData = 16'hFFFF; #20;
+    bsig = 0; SrcData1 = 16'h1111; #20;
     rst = 0;
-    instruction = 16'hA151; DstData = 16'hFFFF; #20;
-    $display("registers got is %b and %b", SrcData1, SrcData2);
+    bsig = 0; SrcData1 = 16'h1111; #20;
+    $display("pc: %b", pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0;
-    instruction = 16'hA151; DstData = 16'hFFFF; #20;
-    $display("registers got is %b and %b", SrcData1, SrcData2);
+    bsig = 0; SrcData1 = 16'h1111; #20;
+    $display("pc: %b", pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0; 
-    instruction = 16'h0321; DstData = 16'hFFFF; #20;
-    $display("registers got is %b and %b", SrcData1, SrcData2);
+    bsig = 0; SrcData1 = 16'h1111; #20;
+    $display("pc: %b", pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0; 
-    instruction = 16'h0321; DstData = 16'hFFFF; #20;
-    $display("registers got is %b and %b", SrcData1, SrcData2);
+    bsig = 0; SrcData1 = 16'h1111; #20;
+    $display("pc: %b", pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     $stop;
   end
   

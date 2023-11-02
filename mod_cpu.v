@@ -27,8 +27,8 @@ module cpu_(clk, rst_n, hlt, pc);
     wire [15:0] sextimm;
 
     // EX/MEM wires
-    wire [15:0] aluout, alutomem, alutowb;
-    wire err;
+    wire [15:0] aluout;
+    // wire err; do we need this????
     wire [2:0] flag_bits;
 
     // MEM/WB wire
@@ -49,7 +49,6 @@ module cpu_(clk, rst_n, hlt, pc);
         //outputs
         .pc_out(pc_curr),
         .instruction(instruction),
-        .opcode(opcode)
     );
 
     // DECODE STAGE
@@ -57,8 +56,8 @@ module cpu_(clk, rst_n, hlt, pc);
         //inputs
         .clk(clk),
         .rst(rst),
-        .pc_curr(pc_curr),
         .instruction(instruction),
+        .DstData(DstData),
         //outputs
         .SrcData1(SrcData1),
         .SrcData2(SrcData2),
@@ -73,36 +72,48 @@ module cpu_(clk, rst_n, hlt, pc);
         .branch(branch), 
         .alusext(alusext), 
         .pcread(pcread), 
-        .rdsrc(rdsrc),
+        .rdsrc(rdsrc)
     );
 
     // EXECUTION
     EX execute(
         //inputs
-        .SrcReg1(),
-        .SrcRed2(),
+        .clk(clk),
+        .rst(rst),
+        .SrcData1(SrcData1),
+        .SrcData2(SrcData2),
+        .sextimm(sextimm)
         .aluop(aluop),
-        .
+        .alusrc(alusrc),
         //outputs
-        .aluout(alout),
-        .alutomem(alutomem),
-        .alutowb(alutowb),
-        .err(err),
-        .flag_out(flag_bits),
+        .aluout(aluout)
+        //.err(err),
+        .flag_out(flag_bits)
     );
+    // mem and writeback will be recieving aluout
 
     // MEMORY
     MEM mem(
         //inputs
-
+        clk(clk),
+        .rst(rst),
+        .SrcData1(SrcData1),
+        .alutomem(aluout),
+        .memenable(memenable),
+        .memwrite(memwrite),
         //outputs
+        .mem_out(mem_out)
     );
 
     // WRITEBACK
     WB writeback(
         //inputs
-
+        .pcread(pcread),
+        .memtoreg(memtoreg),
+        .memtowb(mem_out)
+        .alutowb(aluout),
         //outputs
+        .DstData(DstData)
     );
 
 endmodule

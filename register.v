@@ -64,6 +64,9 @@ module Register0 (input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, i
   assign Bitline2 = ReadEnable2 ? 16'b0 : 16'bz;
 endmodule
 
+
+
+
 module RegisterFile(clk, rst, SrcReg1, SrcReg2, DstReg, WriteReg, DstData, SrcData1, SrcData2);
   // inputs
   input clk, rst;

@@ -1,9 +1,10 @@
-module t_fetch ();
+module test_bench_fetch ();
   reg bsig;
   reg clk, rst;
   reg [2:0] flag_bits;
   reg [15:0] SrcData1;
   wire [15:0] instruction, pc_curr;
+  wire [3:0] opcode;
 
   IF dut (
         //inputs
@@ -14,7 +15,8 @@ module t_fetch ();
         .flag_bits(flag_bits),
         //outputs
         .pc_out(pc_curr),
-        .instruction(instruction)
+        .instruction(instruction),
+        .opcode(opcode)
         );
 
   initial begin
@@ -22,23 +24,25 @@ module t_fetch ();
     #5;
     rst = 1;
     #20;
+    #20;
+    #20;
     bsig = 0; SrcData1 = 16'h1111; flag_bits = 3'b000; #20;
     rst = 0;
     bsig = 0; SrcData1 = 16'h1111; flag_bits = 3'b000; #20;
     $display("pc: %b", pc_curr);
-    $display("instruction got is %b and pc %b", instruction, pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0;
     bsig = 0; SrcData1 = 16'h1111; flag_bits = 3'b000; #20;
     $display("pc: %b", pc_curr);
-    $display("instruction got is %b and pc %b", instruction, pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0; 
     bsig = 0; SrcData1 = 16'h1111; flag_bits = 3'b000; #20;
     $display("pc: %b", pc_curr);
-    $display("instruction got is %b and pc %b", instruction, pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     rst = 0; 
     bsig = 0; SrcData1 = 16'h1111; flag_bits = 3'b000; #20;
     $display("pc: %b", pc_curr);
-    $display("instruction got is %b and pc %b", instruction, pc_curr);
+    $display("instruction got is %b and opcode %b", instruction, opcode);
     $stop;
   end
   

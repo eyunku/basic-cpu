@@ -5,7 +5,6 @@ module cpu (clk, rst_n, hlt, pc);
 
     // wires for FETCH
     // pc reg wires
-    wire rst = ~rst_n;
     wire [15:0] pc_in, pc_out;
     // instruction memory wires
     wire [15:0] instruction;
@@ -15,7 +14,6 @@ module cpu (clk, rst_n, hlt, pc);
     wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
     wire [1:0] branch;
     wire [3:0] aluop;
-    assign opcode = instruction[15:12];
 
     // wires for DECODE
     // reg wires
@@ -50,7 +48,7 @@ module cpu (clk, rst_n, hlt, pc);
     // FETCH
     pc_reg pc_reg (
         .clk(clk), 
-        .rst(rst), 
+        .rst(rst_n), 
         .pc_in(pc_in), 
         .pc_out(pc_out)
     );
@@ -62,7 +60,7 @@ module cpu (clk, rst_n, hlt, pc);
         .enable(1), 
         .wr(0), 
         .clk(clk), 
-        .rst(rst)
+        .rst(rst_n)
     );
     // END OF FETCH
 
@@ -99,7 +97,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     RegisterFile registerfile (
         .clk(clk), 
-        .rst(rst), 
+        .rst(rst_n), 
         .SrcReg1(SrcReg1), 
         .SrcReg2(SrcReg2), 
         .DstReg(DstReg), 
@@ -119,7 +117,7 @@ module cpu (clk, rst_n, hlt, pc);
         .C(C), 
         .I(I), 
         .F(F), 
-        .regsrc(SrcData1), 
+        .regsrc(SrcReg1), 
         .PC_in(pc_out), 
         .PC_out(pc_in)
     );
@@ -127,8 +125,8 @@ module cpu (clk, rst_n, hlt, pc);
 
     // TODO will need to determine placement of flag register in stages
     // EXECUTION
-    assign aluin1 = SrcData1;
-    assign aluin2 = alusrc ? imm_16bit : SrcData2;
+    assign aluin1 = SrcReg1;
+    assign aluin2 = alusrc ? imm_16bit : SrcReg2;
 
     alu alu(
         .aluin1(aluin1), 
@@ -140,7 +138,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     flag_reg FLAG (
         .clk(clk), 
-        .rst(rst), 
+        .rst(rst_n), 
         .write(3'b111), 
         .in(flag_in), 
         .flag_out(flag_out)
@@ -164,11 +162,12 @@ module cpu (clk, rst_n, hlt, pc);
         .enable(memenable), 
         .wr(memwrite), 
         .clk(clk), 
-        .rst(rst)
+        .rst(rst_n)
     );
     // END OF MEMORY
     
     // WRITEBACK
+    full_adder a0 (.a(pc_out), .b(16'h0002), .cin(0), .s(pcs));
     assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
 

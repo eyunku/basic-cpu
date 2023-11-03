@@ -82,11 +82,11 @@ module cpu_(clk, rst_n, hlt, pc);
         .rst(rst),
         .SrcData1(SrcData1),
         .SrcData2(SrcData2),
-        .sextimm(sextimm)
+        .sextimm(sextimm),
         .aluop(aluop),
         .alusrc(alusrc),
         //outputs
-        .aluout(aluout)
+        .aluout(aluout),
         //.err(err),
         .flag_out(flag_bits)
     );
@@ -95,7 +95,7 @@ module cpu_(clk, rst_n, hlt, pc);
     // MEMORY
     MEM mem(
         //inputs
-        clk(clk),
+        .clk(clk),
         .rst(rst),
         .SrcData1(SrcData1),
         .alutomem(aluout),
@@ -110,7 +110,7 @@ module cpu_(clk, rst_n, hlt, pc);
         //inputs
         .pcread(pcread),
         .memtoreg(memtoreg),
-        .memtowb(mem_out)
+        .memtowb(mem_out),
         .alutowb(aluout),
         //outputs
         .DstData(DstData)

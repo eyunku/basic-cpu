@@ -1,3 +1,12 @@
+`include "register.v"
+`include "alu.v"
+`include "control.v"
+`include "flag.v"
+`include "memory.v"
+`include "pc_control.v"
+`include "pc_register.v"
+
+
 module cpu (clk, rst_n, hlt, pc);
     input clk, rst_n;
     output [15:0] pc;
@@ -48,9 +57,10 @@ module cpu (clk, rst_n, hlt, pc);
     wire [15:0] pcs;
 
     // FETCH
-    pc_reg pc_reg (
+    pc_16bit_reg pc_reg (
         .clk(clk), 
-        .rst(rst), 
+        .rst(rst),
+        .freeze_n(1'b0), 
         .pc_in(pc_in), 
         .pc_out(pc_out)
     );
@@ -59,8 +69,8 @@ module cpu (clk, rst_n, hlt, pc);
         .data_out(instruction), 
         .data_in(), 
         .addr(pc_out), 
-        .enable(1), 
-        .wr(0), 
+        .enable(1'b1), 
+        .wr(1'b0), 
         .clk(clk), 
         .rst(rst)
     );

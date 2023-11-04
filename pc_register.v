@@ -8,7 +8,7 @@ module pc_16bit_reg (clk, rst, freeze_n, pc_in, pc_out);
     output [15:0] pc_out;
 
     wire [15:0] hanging;
-    wire freeze = freeze_n;
+    wire freeze = ~freeze_n;
   
     dff b0 (.q(pc_out[0]), .d(pc_in[0]), .wen(freeze), .clk(clk), .rst(rst));
     dff b1 (.q(pc_out[1]), .d(pc_in[1]), .wen(freeze), .clk(clk), .rst(rst));

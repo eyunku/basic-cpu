@@ -1,3 +1,12 @@
+`include "register.v"
+`include "alu.v"
+`include "control.v"
+`include "flag.v"
+`include "memory.v"
+`include "pc_control.v"
+`include "pc_register.v"
+
+
 module cpu (clk, rst_n, hlt, pc);
     input clk, rst_n;
     output [15:0] pc;
@@ -48,9 +57,10 @@ module cpu (clk, rst_n, hlt, pc);
     wire [15:0] pcs;
 
     // FETCH
-    pc_reg pc_reg (
+    pc_16bit_reg pc_reg (
         .clk(clk), 
-        .rst(rst), 
+        .rst(rst),
+        .freeze_n(1'b0), 
         .pc_in(pc_in), 
         .pc_out(pc_out)
     );
@@ -59,8 +69,8 @@ module cpu (clk, rst_n, hlt, pc);
         .data_out(instruction), 
         .data_in(), 
         .addr(pc_out), 
-        .enable(1), 
-        .wr(0), 
+        .enable(1'b1), 
+        .wr(1'b0), 
         .clk(clk), 
         .rst(rst)
     );
@@ -148,9 +158,9 @@ module cpu (clk, rst_n, hlt, pc);
 
     // Update flags (flag = NVZ)
     // TODO make this a signal
-    assign flag_in[2] = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : flag_out[2];
-    assign flag_in[1] = (aluop == 3'h1 | aluop == 3'h0) ? err : flag_out[1];
-    assign flag_in[0] = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[0];
+    assign flag_in[2] = (aluop == 4'h1 | aluop == 4'h0) ? aluout[15] : flag_out[2];
+    assign flag_in[1] = (aluop == 4'h1 | aluop == 4'h0) ? err : flag_out[1];
+    assign flag_in[0] = (aluop == 4'h1 | aluop == 4'h0 | aluop == 4'h2 | aluop == 4'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[0];
     // END OF EXECUTION
 
     // MEMORY

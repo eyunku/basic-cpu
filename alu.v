@@ -80,7 +80,7 @@ module lhb(in, imm, out);
   input[15:0] in, imm;
   output[15:0] out;
   
-  assign out[15:8] = imm[15:8];
+  assign out[15:8] = imm[7:0];
   assign out[7:0] = in[7:0];
 endmodule
 

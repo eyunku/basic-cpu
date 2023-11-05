@@ -11,13 +11,12 @@ module cpu_(clk, rst_n, hlt, pc);
     // flip reset register
     wire rst = ~rst_n;
 
-
     // IF/ID wires
     wire [15:0] pc_curr;
     wire [15:0] instruction;
 
     // ID/EX wires
-    wire [3:0] SrcReg1, SrcReg2, DstReg;
+    wire [3:0] SrcReg1, SrcReg2;
     wire [15:0] DstData, SrcData1, SrcData2;
     // control signals
     wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
@@ -26,13 +25,17 @@ module cpu_(clk, rst_n, hlt, pc);
     // sext
     wire [15:0] sextimm;
 
+    // resolve cpu output signals
+    assign pc = pc_curr;
+    assign hlt = (branch == 2'b11);
+
     // EX/MEM wires
     wire [15:0] aluout;
     // wire err; do we need this????
     wire [2:0] flag_bits;
 
     // MEM/WB wire
-    wire [15:0] mem;
+    wire [15:0] mem_out;
 
     // WB wire
     wire [15:0] pcs;
@@ -48,7 +51,7 @@ module cpu_(clk, rst_n, hlt, pc);
         .flag_bits(flag_bits),
         //outputs
         .pc_out(pc_curr),
-        .instruction(instruction),
+        .instruction(instruction)
     );
 
     // DECODE STAGE
@@ -83,6 +86,7 @@ module cpu_(clk, rst_n, hlt, pc);
         .SrcData1(SrcData1),
         .SrcData2(SrcData2),
         .sextimm(sextimm),
+        .memenable(memenable),
         .aluop(aluop),
         .alusrc(alusrc),
         //outputs
@@ -93,11 +97,11 @@ module cpu_(clk, rst_n, hlt, pc);
     // mem and writeback will be recieving aluout
 
     // MEMORY
-    MEM mem(
+    MEM mem_access(
         //inputs
         .clk(clk),
         .rst(rst),
-        .SrcData1(SrcData1),
+        .SrcData2(SrcData2),
         .alutomem(aluout),
         .memenable(memenable),
         .memwrite(memwrite),
@@ -110,7 +114,8 @@ module cpu_(clk, rst_n, hlt, pc);
         //inputs
         .pcread(pcread),
         .memtoreg(memtoreg),
-        .memtowb(mem_out),
+        .pc_curr(pc_curr),
+        .mem_out(mem_out),
         .alutowb(aluout),
         //outputs
         .DstData(DstData)

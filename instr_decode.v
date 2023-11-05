@@ -24,7 +24,7 @@ module ID (clk, rst, instruction, DstData, sextimm, SrcData1, SrcData2, regwrite
     // regfile wires
     wire [3:0] DstReg = instruction[11:8];
     wire [3:0] SrcReg1 = rdsrc ? DstReg : instruction[7:4]; // LLB + LHB case
-    wire [3:0] SrcReg2 = instruction[3:0];
+    wire [3:0] SrcReg2 = (memenable & memwrite) ? DstReg : instruction[3:0];
 
 
 //control unit

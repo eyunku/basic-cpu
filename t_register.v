@@ -31,36 +31,61 @@ module t_pc_reg ();
   end
 endmodule
 
+`include "register.v"
+
 module test_bench_RF ();
 reg clk, rst, wr;
 reg [3:0] sr1, sr2, dr;
 reg [15:0] dd;
 wire [15:0] sd1, sd2;
 
-RegisterFile dut (.clk(clk), .rst(rst), .SrcReg1(sr1), .SrcReg2(sr2), .DstReg(dr), .WriteReg(wr), .DstData(dd), .SrcData1(sd1), .SrcData2(sd2));
+RegisterFile dut (
+  .clk(clk), 
+  .rst(rst), 
+  .SrcReg1(sr1), 
+  .SrcReg2(sr2), 
+  .DstReg(dr), 
+  .WriteReg(wr), 
+  .DstData(dd), 
+  .SrcData1(sd1), 
+  .SrcData2(sd2)
+);
 
 initial begin
-clk = 0;
-#5;
-rst = 1; sr1 = 4'hA; sr2 = 4'hA; #20;
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'hFACE; #20;
-$display("first write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'h1111; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'hFACE; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'h0; sr2 = 4'hA; wr = 1; dr = 4'h0; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-rst = 0; sr1 = 4'h0; sr2 = 4'h0; wr = 0; dr = 4'h0; dd = 16'h2222; #20;
-$display("second write and read output is %b and %b", sd1, sd2);
-$stop;
+  clk = 0;
+  #5;
+
+  rst = 1; sr1 = 4'hA; sr2 = 4'hA; #20;
+  // after we write reg1, read reg1 and reg2
+  rst = 0; sr1 = 4'h1; sr2 = 4'h2; wr = 1; dr = 4'h1; dd = 16'h7531; #20;
+  $display("write reg1 0x%0h, read reg1 0x%0h, read reg2 0x%0h", dd, sd1, sd2);
+  rst = 0; sr1 = 4'h1; sr2 = 4'h2; wr = 0; dr = 4'h1; dd = 16'h1111; #20;
+  $display(" read reg1 0x%0h, read reg2 0x%0h", sd1, sd2);
+  rst = 0; sr1 = 4'h2; sr2 = 4'h1; wr = 0; dr = 4'h3; dd = 16'h3333; #20;
+  $display(" read reg2 0x%0h, read reg1 0x%0h", sd1, sd2);
+  rst = 0; sr1 = 4'h1; sr2 = 4'h3; wr = 0; dr = 4'h2; dd = 16'h2222; #20;
+  $display(" read reg1 0x%0h, read reg3 0x%0h", sd1, sd2);
+
+  rst = 1; sr1 = 4'hA; sr2 = 4'hA; #20;
+  rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'hFACE; #20;
+  $display("first write and read output is %b and %b", sd1, sd2);
+  rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'h1111; #20;
+  $display("second write and read output is %b and %b", sd1, sd2);
+  rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 1; dr = 4'hA; dd = 16'hFACE; #20;
+  $display("second write and read output is %b and %b", sd1, sd2);
+  rst = 0; sr1 = 4'hA; sr2 = 4'hA; wr = 0; dr = 4'hA; dd = 16'h2222; #20;
+  $display("second write and read output is %b and %b", sd1, sd2);
+  rst = 0; sr1 = 4'h0; sr2 = 4'hA; wr = 1; dr = 4'h0; dd = 16'h2222; #20;
+  $display("second write and read output is %b and %b", sd1, sd2);
+  rst = 0; sr1 = 4'h0; sr2 = 4'h0; wr = 0; dr = 4'h0; dd = 16'h2222; #20;
+  $display("second write and read output is %b and %b", sd1, sd2);
+
+  $stop;
 end
 
 always begin
-#10;
-clk = ~clk;
+  #10;
+  clk = ~clk;
 end
 
 endmodule

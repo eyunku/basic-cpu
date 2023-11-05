@@ -1,3 +1,4 @@
+`include "cpu.v"
 module cpu_tb();
   
 

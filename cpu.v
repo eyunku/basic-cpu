@@ -1,3 +1,12 @@
+`include "register.v"
+`include "alu.v"
+`include "control.v"
+`include "flag.v"
+`include "memory.v"
+`include "pc_control.v"
+`include "pc_register.v"
+
+
 module cpu (clk, rst_n, hlt, pc);
     input clk, rst_n;
     output [15:0] pc;
@@ -5,6 +14,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     // wires for FETCH
     // pc reg wires
+    wire rst = ~rst_n;
     wire [15:0] pc_in, pc_out;
     // instruction memory wires
     wire [15:0] instruction;
@@ -14,6 +24,7 @@ module cpu (clk, rst_n, hlt, pc);
     wire regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
     wire [1:0] branch;
     wire [3:0] aluop;
+    assign opcode = instruction[15:12];
 
     // wires for DECODE
     // reg wires
@@ -46,9 +57,10 @@ module cpu (clk, rst_n, hlt, pc);
     wire [15:0] pcs;
 
     // FETCH
-    pc_reg pc_reg (
+    pc_16bit_reg pc_reg (
         .clk(clk), 
-        .rst(rst_n), 
+        .rst(rst),
+        .freeze_n(1'b0), 
         .pc_in(pc_in), 
         .pc_out(pc_out)
     );
@@ -57,10 +69,10 @@ module cpu (clk, rst_n, hlt, pc);
         .data_out(instruction), 
         .data_in(), 
         .addr(pc_out), 
-        .enable(1), 
-        .wr(0), 
+        .enable(1'b1), 
+        .wr(1'b0), 
         .clk(clk), 
-        .rst(rst_n)
+        .rst(rst)
     );
     // END OF FETCH
 
@@ -81,6 +93,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     // set hlt bit
     assign hlt = branch == 2'b11;
+    assign pc = pc_out;
     // END OF CONTROL UNIT
 
     // DECODE
@@ -96,7 +109,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     RegisterFile registerfile (
         .clk(clk), 
-        .rst(rst_n), 
+        .rst(rst), 
         .SrcReg1(SrcReg1), 
         .SrcReg2(SrcReg2), 
         .DstReg(DstReg), 
@@ -116,7 +129,7 @@ module cpu (clk, rst_n, hlt, pc);
         .C(C), 
         .I(I), 
         .F(F), 
-        .regsrc(SrcReg1), 
+        .regsrc(SrcData1), 
         .PC_in(pc_out), 
         .PC_out(pc_in)
     );
@@ -124,8 +137,8 @@ module cpu (clk, rst_n, hlt, pc);
 
     // TODO will need to determine placement of flag register in stages
     // EXECUTION
-    assign aluin1 = SrcReg1;
-    assign aluin2 = alusrc ? imm_16bit : SrcReg2;
+    assign aluin1 = SrcData1;
+    assign aluin2 = alusrc ? imm_16bit : SrcData2;
 
     alu alu(
         .aluin1(aluin1), 
@@ -137,17 +150,17 @@ module cpu (clk, rst_n, hlt, pc);
 
     flag_reg FLAG (
         .clk(clk), 
-        .rst(rst_n), 
+        .rst(rst), 
         .write(3'b111), 
         .in(flag_in), 
         .flag_out(flag_out)
     );
 
-    // Update flags
+    // Update flags (flag = NVZ)
     // TODO make this a signal
-    assign flag_in[2] = (aluop == 3'h1 | aluop == 3'h0) ? aluout[15] : flag_out[0];
-    assign flag_in[1] = (aluop == 3'h1 | aluop == 3'h0) ? err : flag_out[1];
-    assign flag_in[0] = (aluop == 3'h1 | aluop == 3'h0 | aluop == 3'h2 | aluop == 3'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[2];
+    assign flag_in[2] = (aluop == 4'h1 | aluop == 4'h0) ? aluout[15] : flag_out[2];
+    assign flag_in[1] = (aluop == 4'h1 | aluop == 4'h0) ? err : flag_out[1];
+    assign flag_in[0] = (aluop == 4'h1 | aluop == 4'h0 | aluop == 4'h2 | aluop == 4'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[0];
     // END OF EXECUTION
 
     // MEMORY
@@ -161,12 +174,13 @@ module cpu (clk, rst_n, hlt, pc);
         .enable(memenable), 
         .wr(memwrite), 
         .clk(clk), 
-        .rst(rst_n)
+        .rst(rst)
     );
     // END OF MEMORY
     
     // WRITEBACK
-    full_adder a0 (.a(pc_out), .b(16'h0002), .cin(0), .s(pcs));
     assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
+
+
 endmodule

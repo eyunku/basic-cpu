@@ -2,11 +2,15 @@
 
 // pc contorl for all branch conditions
 module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
+  //inputs
   input [1:0] bsig; // 00 = PC + 2, 01 = PC + 2 + I, 10 = regsrc, 11 = HLT
   input [2:0] C, F; // C ccc, F flag reg
   input [9:0] I; // I immediate
   input [15:0] regsrc, PC_in; // regsrc rs reg, PC_in curr PC
+
+  //output
   output [15:0] PC_out; // PC_out updated PC
+
 
   // Can branch? (ccc is fufilled)
   reg truth;
@@ -45,8 +49,8 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
   wire ovfl_add;
   reg [15:0] out;
 
-  carry_lookahead add_two(.sum(sum2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(0));
-  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(sum2), .b(signext_imm), .mode(0));
+  carry_lookahead add_two(.sum(sum2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(1'b0));
+  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(sum2), .b(signext_imm), .mode(1'b0));
 
   // case statement for branch signal
   // 00: no branch, 01: b, 10: br, 11: hlt

@@ -1,5 +1,3 @@
-// Goku's D-flipflop
-
 // simple dff
 module dff (q, d, wen, clk, rst);
 output q; //DFF output

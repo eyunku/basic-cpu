@@ -210,10 +210,10 @@ module paddsb(a, b, out);
     carry_lookahead_4bit p3 (.a(a[15:12]), .b(b[15:12]), .sum(C4), .cin(1'b0), .cout(E4), .mode(1'b0));
 
     // Arithmetic saturation
-    assign S1 = E1 ? (C1[3] ? 4'b0111 : 4'b1001) : C1;
-    assign S2 = E2 ? (C2[3] ? 4'b0111 : 4'b1001) : C2;
-    assign S3 = E3 ? (C3[3] ? 4'b0111 : 4'b1001) : C3;
-    assign S4 = E4 ? (C4[3] ? 4'b0111 : 4'b1001) : C4;
+    assign S1 = (a[3]  & b[3]  & ~C1[3]) ? 4'b1000 : ((~a[3]  & ~b[3]  & C1[3]) ? 4'b0111 : C1);
+    assign S2 = (a[7]  & b[7]  & ~C2[3]) ? 4'b1000 : ((~a[7]  & ~b[7]  & C2[3]) ? 4'b0111 : C2);
+    assign S3 = (a[11] & b[11] & ~C3[3]) ? 4'b1000 : ((~a[11] & ~b[11] & C3[3]) ? 4'b0111 : C3);
+    assign S4 = (a[15] & b[15] & ~C4[3]) ? 4'b1000 : ((~a[15] & ~b[15] & C4[3]) ? 4'b0111 : C4);
 
     assign out = {S4, S3, S2, S1};
 endmodule

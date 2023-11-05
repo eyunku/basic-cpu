@@ -6,6 +6,9 @@
 `include "pc_control.v"
 `include "pc_register.v"
 
+// Get pc working
+// Figure out proper approach to calculating pcs
+// Figure out why flag register is outputting X
 
 module cpu (clk, rst_n, hlt, pc);
     input clk, rst_n;
@@ -100,7 +103,8 @@ module cpu (clk, rst_n, hlt, pc);
     // dst and src reg assignment
     assign DstReg = instruction[11:8];
     assign SrcReg1 = rdsrc ? DstReg : instruction[7:4]; // LLB + LHB case
-    assign SrcReg2 = instruction[3:0];
+    // SW case, use SrcReg2 for reading register "rt"
+    assign SrcReg2 = (memenable & memwrite) ? DstReg : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};
@@ -137,8 +141,9 @@ module cpu (clk, rst_n, hlt, pc);
 
     // TODO will need to determine placement of flag register in stages
     // EXECUTION
-    assign aluin1 = SrcData1;
-    assign aluin2 = alusrc ? imm_16bit : SrcData2;
+    // For LW or SW, effective address = ([rs] & 0xFFE) + (imm << 1)
+    assign aluin1 = memenable ? (SrcData1 & 16'hFFFE) : SrcData1;
+    assign aluin2 = alusrc ? (memenable ? (imm_16bit << 1) : imm_16bit) : SrcData2;
 
     alu alu(
         .aluin1(aluin1), 
@@ -169,7 +174,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     main_memory cpu_memory (
         .data_out(mem), 
-        .data_in(SrcData1), 
+        .data_in(SrcData2), 
         .addr(alutomem), 
         .enable(memenable), 
         .wr(memwrite), 
@@ -179,6 +184,7 @@ module cpu (clk, rst_n, hlt, pc);
     // END OF MEMORY
     
     // WRITEBACK
+    carry_lookahead pcs_adder(.a(pc_in), .b(16'h2), .sum(pcs), .overflow(), .mode(1'b0));
     assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
 

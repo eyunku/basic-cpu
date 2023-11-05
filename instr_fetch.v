@@ -15,7 +15,7 @@ module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction);
 // pc control wires
     wire [2:0] C = instruction[11:9];
     wire [2:0] F = flag_bits;
-    wire [9:0] I = {instruction[7:0], 1'b0}; // i dont think we can use this
+    wire [9:0] I = {instruction[8:0], 1'b0};
     
 
 // PC register
@@ -23,6 +23,7 @@ module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction);
         // inputs
         .clk(clk), 
         .rst(rst), 
+        .freeze_n(1'b0),
         .pc_in(pc_next), 
         // outputs
         .pc_out(pc_out)
@@ -30,12 +31,12 @@ module IF (clk, rst, br_sig, SrcData1, flag_bits, pc_out, instruction);
 
 // instruction memory fetch
     instruction_memory instruction_mem (
-        .data_out(instruction), 
-        .data_in(), 
-        .addr(pc_out), 
-        .enable(1), 
-        .wr(0), 
-        .clk(clk), 
+        .data_out(instruction),
+        .data_in(),
+        .addr(pc_out),
+        .enable(1'b1),
+        .wr(0),
+        .clk(clk),
         .rst(rst)
     );
 

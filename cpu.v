@@ -6,10 +6,6 @@
 `include "pc_control.v"
 `include "pc_register.v"
 
-// Get pc working
-// Figure out proper approach to calculating pcs
-// Figure out why flag register is outputting X
-
 module cpu (clk, rst_n, hlt, pc);
     input clk, rst_n;
     output [15:0] pc;
@@ -55,9 +51,6 @@ module cpu (clk, rst_n, hlt, pc);
 
     // wires for MEMORY
     wire [15:0] mem;
-
-    // wire for WB
-    wire [15:0] pcs;
 
     // FETCH
     pc_16bit_reg pc_reg (
@@ -161,7 +154,6 @@ module cpu (clk, rst_n, hlt, pc);
     );
 
     // Update flags (flag = NVZ)
-    // TODO make this a signal
     assign flag_in[2] = (branch | pcread) ? flag_out[2] :
                         ((aluop == 4'h1 | aluop == 4'h0) ? aluout[15] : flag_out[2]);
     assign flag_in[1] = (branch | pcread) ? flag_out[1] :

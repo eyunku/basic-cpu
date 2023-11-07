@@ -1,5 +1,3 @@
-// TODO redo signals so that we don't need to hardcode each instruction for each signal
-// TODO consider adding an additional signal that flips src1 and src2 for LHB, only need a single module now for doing both LLB and LHB
 module control(opcode, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, branch, alusext, pcread, rdsrc);
     input [3:0] opcode;
     output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;

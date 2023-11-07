@@ -344,7 +344,6 @@ module carry_lookahead(a, b, sum, overflow, mode);
     assign neg = 16'h8000;
     assign pos = 16'h7fff;
 
-    // TODO: we should just delete "mode" input to carry_lookahead_4bit
     assign b_in = mode ? ~b : b;
     carry_lookahead_4bit cla0(.a(a[3:0]), .b(b_in[3:0]), .cin(mode), .sum(CLASum[3:0]), .cout(c0_1), .mode(1'b0));
     carry_lookahead_4bit cla1(.a(a[7:4]), .b(b_in[7:4]), .cin(c0_1), .sum(CLASum[7:4]), .cout(c1_2), .mode(1'b0));

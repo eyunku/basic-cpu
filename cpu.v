@@ -139,7 +139,6 @@ module cpu (clk, rst_n, hlt, pc);
     );
     // END OF DECODE
 
-    // TODO will need to determine placement of flag register in stages
     // EXECUTION
     // For LW or SW, effective address = ([rs] & 0xFFE) + (imm << 1)
     assign aluin1 = memenable ? (SrcData1 & 16'hFFFE) : SrcData1;
@@ -163,9 +162,13 @@ module cpu (clk, rst_n, hlt, pc);
 
     // Update flags (flag = NVZ)
     // TODO make this a signal
-    assign flag_in[2] = (aluop == 4'h1 | aluop == 4'h0) ? aluout[15] : flag_out[2];
-    assign flag_in[1] = (aluop == 4'h1 | aluop == 4'h0) ? err : flag_out[1];
-    assign flag_in[0] = (aluop == 4'h1 | aluop == 4'h0 | aluop == 4'h2 | aluop == 4'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6) ? (aluout == 16'h0000) : flag_out[0];
+    assign flag_in[2] = (branch | pcread) ? flag_out[2] :
+                        ((aluop == 4'h1 | aluop == 4'h0) ? aluout[15] : flag_out[2]);
+    assign flag_in[1] = (branch | pcread) ? flag_out[1] :
+                        ((aluop == 4'h1 | aluop == 4'h0) ? err : flag_out[1]);
+    assign flag_in[0] = (branch | pcread) ? flag_out[0] :
+                        ((aluop == 4'h1 | aluop == 4'h0 | aluop == 4'h2 | aluop == 4'h3 | aluop == 3'h4 | aluop == 3'h5 | aluop == 3'h6)
+                            ? (aluout == 16'h0000) : flag_out[0]);
     // END OF EXECUTION
 
     // MEMORY
@@ -184,8 +187,7 @@ module cpu (clk, rst_n, hlt, pc);
     // END OF MEMORY
     
     // WRITEBACK
-    carry_lookahead pcs_adder(.a(pc_in), .b(16'h2), .sum(pcs), .overflow(), .mode(1'b0));
-    assign DstData = pcread ? pcs : (memtoreg ? mem : alutowb);
+    assign DstData = pcread ? pc_in : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
 
 

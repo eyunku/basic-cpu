@@ -1,19 +1,19 @@
 // execution stage
 
-module EX (clk, rst, SrcData1, SrcData2, sextimm, alusrc, aluop, aluout, flag_out);
+module EX (clk, rst, SrcData1, SrcData2, sextimm, alusrc, memenable, aluop, aluout, flag_out);
     // input 
     input clk, rst;
     input [15:0] SrcData1, SrcData2, sextimm;
     input [3:0] aluop;
-    input alusrc;
+    input alusrc, memenable;
     //output
     output [15:0] aluout;
     output [2:0] flag_out; // NVZ
 
 
     // wires
-    wire [15:0] aluin1 = SrcData1;
-    wire [15:0] aluin2 = alusrc ? sextimm : SrcData2;
+    wire [15:0] aluin1 = memenable ? (SrcData1 & 16'hFFFE) : SrcData1;
+    wire [15:0] aluin2 = alusrc ? (memenable ? (sextimm << 1) : sextimm) : SrcData2;
     wire err;
 
     // Update flags (flag = NVZ)

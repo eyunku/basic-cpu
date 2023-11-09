@@ -120,6 +120,6 @@ module mod_CPU (
 
     // set hlt bit
     assign hlt = branch == 2'b11;
-    assign pc = pc_out;
+    assign pc = pc_in;
     
 endmodule

@@ -1,5 +1,3 @@
-// TODO redo signals so that we don't need to hardcode each instruction for each signal
-// TODO consider adding an additional signal that flips src1 and src2 for LHB, only need a single module now for doing both LLB and LHB
 module control(opcode, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, branch, alusext, pcread, rdsrc);
     input [3:0] opcode;
     output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
@@ -27,6 +25,7 @@ module control(opcode, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, b
     // AlUop, determines what operation to pass out the ALU
     // 0 = add, 1 = sub, 2 = xor, 3 = red, 4 = sll, 5 = sra, 6 = ror, 7 = paddsb
     // 8 = llb, 9 = lhb, x = if opcode is neither
+    // TODO Replace default case with a less intrusive value
     assign aluop = (opcode == 4'b0000 | opcode == 4'b1000 | opcode == 4'b1001) ? 4'b0000 :
                    (opcode == 4'b0001) ? 4'b0001 :
                    (opcode == 4'b0010) ? 4'b0010 :

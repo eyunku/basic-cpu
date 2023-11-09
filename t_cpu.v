@@ -1,4 +1,5 @@
-`include "cpu.v"
+`include "mod_CPU.v"
+
 module cpu_tb();
   
 
@@ -27,7 +28,7 @@ module cpu_tb();
 
      
 
-   cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
+   mod_CPU DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
    
 
 
@@ -199,7 +200,7 @@ module cpu_tb();
    assign RegWrite = DUT.regwrite;
    // Is memory being read, one bit signal (1 means yes, 0 means no)
    
-   assign WriteRegister = DUT.DstReg;
+   assign WriteRegister = DUT.mod_id.DstReg;
    // The name of the register being written to. (4 bit signal)
 
    assign WriteData = DUT.DstData;

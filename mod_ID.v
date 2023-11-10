@@ -10,14 +10,11 @@ module mod_ID (
         input [15:0] instruction, pc, DstData,
         output regwrite, alusrc, memenable, memwrite, memtoreg, alusext, pcread, rdsrc,
         output [1:0] branch,
-        output [3:0] aluop,
-        output [15:0] SrcReg1_out, SrcReg2_out, DstReg_out, SrcData1, SrcData2, new_pc, imm_16bit);
+        output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
+        output [15:0] SrcData1, SrcData2, new_pc, imm_16bit);
 
     // control wire
     wire [3:0] opcode;
-
-    // register input/output wires
-    wire [3:0] SrcReg1, SrcReg2, DstReg;
 
     // imm sext wires
     wire [15:0] imm_4bit;
@@ -44,14 +41,10 @@ module mod_ID (
     );
 
     // dst and src reg assignment
-    assign DstReg = instruction[11:8];
     assign DstReg_out = instruction[11:8];
-    assign SrcReg1 = rdsrc ? DstReg : instruction[7:4]; // LLB + LHB case
+    assign SrcReg1 = rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
     // SW case, use SrcReg2 for reading register "rt"
-    assign SrcReg2 = (memenable & memwrite) ? DstReg : instruction[3:0];
-
-    assign SrcReg1_out = SrcReg1_out;
-    assign SrcReg2_out = SrcReg2_out;
+    assign SrcReg2 = (memenable & memwrite) ? DstReg_out : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};
@@ -63,7 +56,7 @@ module mod_ID (
         .rst(rst), 
         .SrcReg1(SrcReg1), 
         .SrcReg2(SrcReg2), 
-        .DstReg(DstReg), 
+        .DstReg(DstReg_out), 
         .WriteReg(regwrite), 
         .DstData(DstData), 
         .SrcData1(SrcData1), 

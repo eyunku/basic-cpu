@@ -116,8 +116,8 @@ module mod_CPU (
         .SrcReg1(SrcReg1),
         .SrcReg2(SrcReg2),
         .DstReg_out(DstReg_out),
-        .SrcData1_out(SrcData1),
-        .SrcData2_out(SrcData2),
+        .SrcData1(SrcData1),
+        .SrcData2(SrcData2),
         .new_pc(pc_in),
         .imm_16bit(imm_16bit));
 

@@ -24,6 +24,9 @@ module mod_ID (
     wire [9:0] I;
     wire [2:0] C, F;
 
+    // register output wires
+    wire [15:0] out1, out2;
+
     // CONTROL UNIT
     assign opcode = instruction[15:12];
     control control_unit (
@@ -59,9 +62,12 @@ module mod_ID (
         .DstReg(DstReg_out), 
         .WriteReg(regwrite), 
         .DstData(DstData), 
-        .SrcData1(SrcData1), 
-        .SrcData2(SrcData2)
+        .SrcData1(out1), 
+        .SrcData2(out2)
     );
+
+    assign SrcData1 = pcread ? pc : out1;
+    assign SrcData2 = pcread ? 16'h0 : out2;
 
     // PC control
     assign C = instruction[11:9];

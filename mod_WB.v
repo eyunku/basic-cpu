@@ -6,6 +6,6 @@ module mod_WB (
         output [15:0] DstData);
 
     //wire
-    assign DstData = pcread ? pc_in : (memtoreg ? mem : alutowb);
+    assign DstData = memtoreg ? mem : alutowb;
     
 endmodule

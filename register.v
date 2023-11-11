@@ -36,8 +36,8 @@ wire w1;
 
 dff thisreg (.q(w1), .d(D), .wen(WriteEnable), .clk(clk), .rst(rst));
 
-assign Bitline1 = ReadEnable1 ? w1: 1'bz;
-assign Bitline2 = ReadEnable2 ? w1: 1'bz;
+assign Bitline1 = ReadEnable1 ? (WriteEnable ? D : w1): 1'bz; // includes register bypassing
+assign Bitline2 = ReadEnable2 ? (WriteEnable ? D : w1): 1'bz;
 endmodule
 
 

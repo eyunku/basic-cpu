@@ -7,6 +7,9 @@
 `include "pc_control.v"
 `include "pc_register.v"
 `include "pipe_register.v"
+`include "forwarding_logic.v"
+`include "hazard_detection.v"
+
 
 `include "mod_if.v"
 `include "mod_id.v"
@@ -111,6 +114,7 @@ module mod_CPU (
     wire [15:0] imm_16bit_ID;
     wire [15:0] DstData_WB;
 
+    // module for decode stage
     mod_ID mod_id(
         .clk(clk),
         .rst(rst),
@@ -136,6 +140,14 @@ module mod_CPU (
         .SrcData2(SrcData2_ID),
         .new_pc(pc_in_ID),
         .imm_16bit(imm_16bit_ID));
+
+    // hazard unit
+    hazard_unit hazard (
+        .fd_memread(MemRead_D), .fd_rs(SrcReg1_ID), .fd_rt(SrcReg2_ID),
+        .dx_rt(DstReg_EX), .dx_memread(memenable_EX & ~memwrite_EX),
+        .stall_sig(),
+        .rs_dep()
+    );
 
     // ==== ID/EX Pipeline Register ====
 

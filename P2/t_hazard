@@ -1,0 +1,119 @@
+#! /opt/homebrew/Cellar/icarus-verilog/12.0/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision + 0;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/va_math.vpi";
+S_0x13fe14e30 .scope module, "t_hazard" "t_hazard" 2 3;
+ .timescale 0 0;
+v0x13fe25700_0 .var "DstReg_EX", 3 0;
+v0x13fe25790_0 .var "SrcReg1_ID", 3 0;
+v0x13fe25820_0 .var "SrcReg2_ID", 3 0;
+v0x13fe258b0_0 .var "memread_EX", 0 0;
+v0x13fe25940_0 .var "memread_ID", 0 0;
+v0x13fe25a10_0 .net "rs_dep", 0 0, L_0x13fe25d80;  1 drivers
+v0x13fe25ac0_0 .net "stall_sig", 0 0, L_0x13fe26470;  1 drivers
+S_0x13fe09eb0 .scope module, "dut" "hazard_unit" 2 8, 3 16 0, S_0x13fe14e30;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "dx_memread";
+    .port_info 1 /INPUT 1 "fd_memread";
+    .port_info 2 /INPUT 4 "dx_rt";
+    .port_info 3 /INPUT 4 "fd_rs";
+    .port_info 4 /INPUT 4 "fd_rt";
+    .port_info 5 /OUTPUT 1 "stall_sig";
+    .port_info 6 /OUTPUT 1 "rs_dep";
+L_0x13fe25c90 .functor AND 1, v0x13fe258b0_0, L_0x13fe25b70, C4<1>, C4<1>;
+L_0x13fe25f20 .functor NOT 1, v0x13fe25940_0, C4<0>, C4<0>, C4<0>;
+L_0x13fe25fd0 .functor AND 1, v0x13fe258b0_0, L_0x13fe25f20, C4<1>, C4<1>;
+L_0x13fe26240 .functor OR 1, L_0x13fe26080, L_0x13fe26120, C4<0>, C4<0>;
+L_0x13fe26350 .functor AND 1, L_0x13fe25fd0, L_0x13fe26240, C4<1>, C4<1>;
+v0x13fe15050_0 .net *"_ivl_0", 0 0, L_0x13fe25b70;  1 drivers
+v0x13fe24900_0 .net *"_ivl_10", 0 0, L_0x13fe25f20;  1 drivers
+v0x13fe249a0_0 .net *"_ivl_12", 0 0, L_0x13fe25fd0;  1 drivers
+v0x13fe24a50_0 .net *"_ivl_14", 0 0, L_0x13fe26080;  1 drivers
+v0x13fe24af0_0 .net *"_ivl_16", 0 0, L_0x13fe26120;  1 drivers
+v0x13fe24bd0_0 .net *"_ivl_18", 0 0, L_0x13fe26240;  1 drivers
+v0x13fe24c80_0 .net *"_ivl_2", 0 0, L_0x13fe25c90;  1 drivers
+v0x13fe24d30_0 .net *"_ivl_20", 0 0, L_0x13fe26350;  1 drivers
+L_0x1300780a0 .functor BUFT 1, C4<1>, C4<0>, C4<0>, C4<0>;
+v0x13fe24de0_0 .net/2u *"_ivl_22", 0 0, L_0x1300780a0;  1 drivers
+L_0x1300780e8 .functor BUFT 1, C4<0>, C4<0>, C4<0>, C4<0>;
+v0x13fe24ef0_0 .net/2u *"_ivl_24", 0 0, L_0x1300780e8;  1 drivers
+L_0x130078010 .functor BUFT 1, C4<1>, C4<0>, C4<0>, C4<0>;
+v0x13fe24fa0_0 .net/2u *"_ivl_4", 0 0, L_0x130078010;  1 drivers
+L_0x130078058 .functor BUFT 1, C4<0>, C4<0>, C4<0>, C4<0>;
+v0x13fe25050_0 .net/2u *"_ivl_6", 0 0, L_0x130078058;  1 drivers
+v0x13fe25100_0 .net "dx_memread", 0 0, v0x13fe258b0_0;  1 drivers
+v0x13fe251a0_0 .net "dx_rt", 3 0, v0x13fe25700_0;  1 drivers
+v0x13fe25250_0 .net "fd_memread", 0 0, v0x13fe25940_0;  1 drivers
+v0x13fe252f0_0 .net "fd_rs", 3 0, v0x13fe25790_0;  1 drivers
+v0x13fe253a0_0 .net "fd_rt", 3 0, v0x13fe25820_0;  1 drivers
+v0x13fe25530_0 .net "rs_dep", 0 0, L_0x13fe25d80;  alias, 1 drivers
+v0x13fe255c0_0 .net "stall_sig", 0 0, L_0x13fe26470;  alias, 1 drivers
+L_0x13fe25b70 .cmp/eq 4, v0x13fe25700_0, v0x13fe25790_0;
+L_0x13fe25d80 .functor MUXZ 1, L_0x130078058, L_0x130078010, L_0x13fe25c90, C4<>;
+L_0x13fe26080 .cmp/eq 4, v0x13fe25700_0, v0x13fe25790_0;
+L_0x13fe26120 .cmp/eq 4, v0x13fe25700_0, v0x13fe25820_0;
+L_0x13fe26470 .functor MUXZ 1, L_0x1300780e8, L_0x1300780a0, L_0x13fe26350, C4<>;
+    .scope S_0x13fe14e30;
+T_0 ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13fe258b0_0, 0, 1;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13fe25940_0, 0, 1;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25700_0, 0, 4;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13fe25790_0, 0, 4;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25820_0, 0, 4;
+    %delay 20, 0;
+    %vpi_call 2 27 "$display", "stall: %b branch_stall: %b", v0x13fe25ac0_0, v0x13fe25a10_0 {0 0 0};
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13fe258b0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13fe25940_0, 0, 1;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25700_0, 0, 4;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13fe25790_0, 0, 4;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25820_0, 0, 4;
+    %delay 20, 0;
+    %vpi_call 2 31 "$display", "stall: %b branch_stall: %b", v0x13fe25ac0_0, v0x13fe25a10_0 {0 0 0};
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13fe258b0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13fe25940_0, 0, 1;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25700_0, 0, 4;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13fe25790_0, 0, 4;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13fe25820_0, 0, 4;
+    %delay 20, 0;
+    %vpi_call 2 35 "$display", "stall: %b branch_stall: %b", v0x13fe25ac0_0, v0x13fe25a10_0 {0 0 0};
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0x13fe258b0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0x13fe25940_0, 0, 1;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25700_0, 0, 4;
+    %pushi/vec4 4, 0, 4;
+    %store/vec4 v0x13fe25790_0, 0, 4;
+    %pushi/vec4 5, 0, 4;
+    %store/vec4 v0x13fe25820_0, 0, 4;
+    %delay 20, 0;
+    %vpi_call 2 39 "$display", "stall: %b branch_stall: %b", v0x13fe25ac0_0, v0x13fe25a10_0 {0 0 0};
+    %vpi_call 2 40 "$stop" {0 0 0};
+    %end;
+    .thread T_0;
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "t_hazard.v";
+    "./hazard_detection.v";

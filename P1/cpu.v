@@ -56,7 +56,7 @@ module cpu (clk, rst_n, hlt, pc);
     pc_16bit_reg pc_reg (
         .clk(clk), 
         .rst(rst),
-        .freeze(1'b0),
+        .freeze_n(1'b0), 
         .pc_in(pc_in), 
         .pc_out(pc_out)
     );
@@ -86,6 +86,10 @@ module cpu (clk, rst_n, hlt, pc);
         .pcread(pcread), 
         .rdsrc(rdsrc)
     );
+
+    // set hlt bit
+    assign hlt = branch == 2'b11;
+    assign pc = pc_out;
     // END OF CONTROL UNIT
 
     // DECODE
@@ -114,7 +118,7 @@ module cpu (clk, rst_n, hlt, pc);
 
     // PC control
     assign C = instruction[11:9];
-    assign I = {instruction[8:0], 0};
+    assign I = instruction[8:0] << 1;
     assign F = flag_out;
 
     pc_control pc_control (
@@ -178,8 +182,5 @@ module cpu (clk, rst_n, hlt, pc);
     assign DstData = pcread ? pc_in : (memtoreg ? mem : alutowb);
     // END OF WRITEBACK
 
-    // set hlt bit
-    assign hlt = branch == 2'b11;
-    assign pc = pc_out;
 
 endmodule

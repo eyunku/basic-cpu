@@ -8,7 +8,7 @@ module mod_ID (
         input [2:0] flag,
         input [3:0] DstReg_in,
         input [15:0] instruction, pc, DstData,
-        output regwrite, alusrc, memenable, memwrite, memtoreg, alusext, pcread, rdsrc,
+        output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt,
         output [1:0] branch,
         output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
         output [15:0] SrcData1, SrcData2, new_pc, imm_16bit);
@@ -84,4 +84,5 @@ module mod_ID (
         .PC_out(new_pc)
     );
 
+    assign halt = branch == 2'b11;
 endmodule

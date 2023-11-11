@@ -104,14 +104,14 @@ module mod_CPU (
     // ==== DECODE module ====
 
     // wires for CONTROL UNIT
-    wire regwrite_ID, alusrc_ID, memenable_ID, memwrite_ID, memtoreg_ID, pcread_ID, alusext_ID, rdsrc_ID;
+    wire regwrite_ID, alusrc_ID, memenable_ID, memwrite_ID, memtoreg_ID, pcread_ID, alusext_ID, rdsrc_ID, halt_ID;
     wire [1:0] branch_ID;
     wire [3:0] aluop_ID;
 
     // wires for DECODE
     // reg wires
     wire [3:0] SrcReg1_ID, SrcReg2_ID, DstReg_out_ID;
-    wire [15:0 ]SrcData1_ID, SrcData2_ID;
+    wire [15:0] SrcData1_ID, SrcData2_ID;
     wire [15:0] imm_16bit_ID;
     wire [15:0] DstData_WB;
 
@@ -128,9 +128,9 @@ module mod_CPU (
         .memenable(memenable_ID),
         .memwrite(memwrite_ID),
         .memtoreg(memtoreg_ID),
-        .alusext(alusext_ID),
         .pcread(pcread_ID),
         .rdsrc(rdsrc_ID),
+        .halt(halt_ID),
         .branch(branch_ID),
         .aluop(aluop_ID),
         .SrcReg1(SrcReg1_ID),
@@ -142,15 +142,15 @@ module mod_CPU (
         .imm_16bit(imm_16bit_ID));
 
     // ==== ID/EX Pipeline Register ====
-    wire regwrite_EX, alusrc_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, alusext_EX, rdsrc_EX;
+    wire regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
     wire [1:0] branch_EX;
     wire [3:0] aluop_EX;
 
-    // wires for DECODE
-    // reg wires
-    wire [3:0] SrcReg1_EX, SrcReg2_EX, DstReg_EX;
-    wire [15:0] SrcData1_EX, SrcData2_EX;
-    wire [15:0] imm_16bit_EX;
+    // Wires for forwarding + data hazard unit
+    wire [3:0] SrcReg1_EX, SrcReg2_EX;
+
+    wire [3:0] DstReg_EX;
+    wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX, pc_EX;
 
     // IDEX IDEX_pipe(
     //     .rst(rst),
@@ -164,9 +164,8 @@ module mod_CPU (
     assign memwrite_EX = memwrite_ID;
     assign memtoreg_EX = memtoreg_ID;
     assign pcread_EX = pcread_ID; // May not need to pass this wire through
-    assign alusext_EX = alusext_ID;
-    assign rdsrc_EX = rdsrc_ID;
-    assign branch_EX = branch_ID; // may not need to pass this wire through
+    assign halt_EX = halt_ID;
+    assign branch_EX = branch_ID;
     assign aluop_EX = aluop_ID;
 
     assign SrcReg1_EX = SrcReg1_ID;
@@ -175,6 +174,7 @@ module mod_CPU (
     assign SrcData1_EX = SrcData1_ID;
     assign SrcData2_EX = SrcData2_ID;
     assign imm_16bit_EX = imm_16bit_ID;
+    assign pc_EX = pc_in_ID;
 
     // ==== EXECUTION module ====
 
@@ -198,6 +198,24 @@ module mod_CPU (
         .flag_out(flag_out));
 
     // ==== EX/MEM Pipeline Register ====
+    wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
+    wire [3:0] SrcReg1_MEM, SrcReg2_MEM;
+    wire [15:0] DstReg_MEM, SrcData2_MEM, aluout_MEM, pc_MEM;
+
+    assign regwrite_MEM = regwrite_EX;
+    assign memenable_MEM = memenable_EX;
+    assign memwrite_MEM = memwrite_EX;
+    assign memtoreg_MEM = memtoreg_EX;
+    assign halt_MEM = halt_EX;
+
+    // Forwarding unit (mem-mem)
+    assign SrcReg1_MEM = SrcReg1_EX;
+    assign SrcReg2_MEM = SrcReg2_EX;
+    
+    assign DstReg_MEM = DstReg_EX;
+    assign SrcData2_MEM = SrcData2_EX;
+    assign aluout_MEM = aluout_EX;
+    assign pc_MEM = pc_EX;
 
     // ==== MEMORY module ====
 
@@ -206,29 +224,35 @@ module mod_CPU (
     mod_MEM mod_mem(
         .clk(clk),
         .rst(rst),
-        .memenable(memenable_EX),
-        .memwrite(memwrite_EX),
-        .SrcData2(SrcData2_EX),
-        .aluout(aluout_EX),
+        .memenable(memenable_MEM),
+        .memwrite(memwrite_MEM),
+        .memdata(SrcData2_MEM),
+        .addr(aluout_MEM),
         .mem_out(mem));
 
     // ==== MEM/WB Pipeline Register ====
+    wire regwrite_WB, memtoreg_WB, halt_WB;
+    wire [15:0] DstReg_WB, aluout_WB, mem_WB, pc_WB;
+
+    assign DstReg_WB = DstReg_MEM;
+    assign regwrite_WB = regwrite_MEM;
+    assign memtoreg_WB = memtoreg_MEM;
+    assign halt_WB = halt_MEM;
+
+    assign aluout_WB = aluout_MEM;
+    assign mem_WB = mem;
+    assign pc_WB = pc_MEM;
 
     // ==== WB module ====
 
-    wire [15:0] alutomem;
-    assign alutomem = aluout_EX;
-
     mod_WB mod_wb(
-        .pcread(pcread_EX),
-        .memtoreg(memtoreg_EX),
-        .pc_in(pc_in_ID),
-        .alutowb(aluout_EX),
-        .mem(mem),
+        .memtoreg(memtoreg_WB),
+        .alutowb(aluout_WB),
+        .mem(mem_WB),
         .DstData(DstData_WB));
 
     // set hlt bit
-    assign hlt = branch_EX == 2'b11;
-    assign pc = pc_in_ID;
-    
+    assign hlt = halt_WB;
+    // TODO pc is set to curr_pc + 2
+    assign pc = pc_WB;
 endmodule

@@ -1,6 +1,6 @@
 // execution stage
 module mod_EX (
-        input clk, rst, freeze,
+        input clk, rst,
         input alusrc, memenable, pcread,
         input [1:0] branch,
         input [3:0] aluop,

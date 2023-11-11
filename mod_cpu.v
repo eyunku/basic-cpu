@@ -6,13 +6,14 @@
 `include "memory.v"
 `include "pc_control.v"
 `include "pc_register.v"
+`include "pipe_register.v"
 
-`include "mod_IF.v"
-`include "mod_ID.v"
-`include "mod_EX.v"
-`include "mod_MEM.v"
-`include "mod_WB.v"
-
+`include "mod_if.v"
+`include "mod_id.v"
+`include "mod_ex.v"
+`include "mod_mem.v"
+`include "mod_wb.v"
+`include "mod_pipe.v"
 
 // ==== FETCH stage ====
 // Split up PC control
@@ -68,7 +69,7 @@ module mod_CPU (
 
     // ==== FETCH module ====
 
-    wire freeze = 1'b0;
+    parameter freeze = 1'b0;
     // pc reg wires
     wire rst = ~rst_n;
     wire [15:0] pc_in_ID, pc_out_IF;
@@ -85,21 +86,16 @@ module mod_CPU (
         .instruction(instruction_IF));
 
     // ==== IF/ID Pipeline Register ====
+
     wire [15:0] instruction_ID, pc_out_ID;
 
-    // IFID IFID_pipe(
-    //     .rst(rst),
-    //     .clk(clk),
-    //     .flush(flush), // for branch not taken
-    //     .freeze(freeze), // for stalls
-    //     .instruction_in(instruction_IF),
-    //     .pc_in(pc_out_IF),
-    //     .instruction_out(instruction_ID),
-    //     .pc_out(pc_out_ID),
-    // );
-
-    assign instruction_ID = instruction_IF;
-    assign pc_out_ID = pc_out_IF;
+    IF_ID_pipe if_id_pipe(
+        .clk(clk),
+        .rst(rst),
+        .flush(1'b0), // TODO: for branch not taken
+        .freeze(freeze), // for stalls
+        .inst_i(instruction_IF), .inst_o(instruction_ID),
+        .pc_i(pc_out_IF), .pc_o(pc_out_ID));
 
     // ==== DECODE module ====
 
@@ -119,7 +115,7 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flag(flag_out),
-        .DstReg_in(), // hanging
+        .DstReg_in(DstReg_WB), // hanging
         .instruction(instruction_ID),
         .pc(pc_out_IF),
         .DstData(DstData_WB),
@@ -142,7 +138,8 @@ module mod_CPU (
         .imm_16bit(imm_16bit_ID));
 
     // ==== ID/EX Pipeline Register ====
-    wire regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
+
+    wire alusrc_EX, regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
     wire [1:0] branch_EX;
     wire [3:0] aluop_EX;
 
@@ -152,29 +149,26 @@ module mod_CPU (
     wire [3:0] DstReg_EX;
     wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX, pc_EX;
 
-    // IDEX IDEX_pipe(
-    //     .rst(rst),
-    //     .clk(clk),
-    //     .regwrite(reg)
-    // );
-
-    assign regwrite_EX = regwrite_ID;
-    assign alusrc_EX = alusrc_ID;
-    assign memenable_EX = memenable_ID;
-    assign memwrite_EX = memwrite_ID;
-    assign memtoreg_EX = memtoreg_ID;
-    assign pcread_EX = pcread_ID; // May not need to pass this wire through
-    assign halt_EX = halt_ID;
-    assign branch_EX = branch_ID;
-    assign aluop_EX = aluop_ID;
-
-    assign SrcReg1_EX = SrcReg1_ID;
-    assign SrcReg2_EX = SrcReg2_ID;
-    assign DstReg_EX = DstReg_out_ID;
-    assign SrcData1_EX = SrcData1_ID;
-    assign SrcData2_EX = SrcData2_ID;
-    assign imm_16bit_EX = imm_16bit_ID;
-    assign pc_EX = pc_in_ID;
+    ID_EX_pipe id_ex_pipe(
+        .clk(clk),
+        .rst(rst),
+        .freeze(freeze), // for stalls
+        .alusrc_i(alusrc_ID), .alusrc_o(alusrc_EX),
+        .regwrite_i(regwrite_ID), .regwrite_o(regwrite_EX),
+        .memenable_i(memenable_ID), .memenable_o(memenable_EX),
+        .memwrite_i(memwrite_ID), .memwrite_o(memwrite_EX),
+        .memtoreg_i(memtoreg_ID), .memtoreg_o(memtoreg_EX),
+        .pcread_i(pcread_ID), .pcread_o(pcread_EX),
+        .halt_i(halt_ID), .halt_o(halt_EX),
+        .branch_i(branch_ID), .branch_o(branch_EX),
+        .aluop_i(aluop_ID), .aluop_o(aluop_EX),
+        .SrcReg1_i(SrcReg1_ID), .SrcReg1_o(SrcReg1_EX),
+        .SrcReg2_i(SrcReg2_ID), .SrcReg2_o(SrcReg2_EX),
+        .DstReg_i(DstReg_out_ID), .DstReg_o(DstReg_EX),
+        .SrcData1_i(SrcData1_ID), .SrcData1_o(SrcData1_EX),
+        .SrcData2_i(SrcData2_ID), .SrcData2_o(SrcData2_EX),
+        .imm_16bit_i(imm_16bit_ID), .imm_16bit_o(imm_16bit_EX),
+        .pc_i(pc_in_ID), .pc_o(pc_EX));
 
     // ==== EXECUTION module ====
 
@@ -199,23 +193,24 @@ module mod_CPU (
 
     // ==== EX/MEM Pipeline Register ====
     wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
-    wire [3:0] SrcReg1_MEM, SrcReg2_MEM;
-    wire [15:0] DstReg_MEM, SrcData2_MEM, aluout_MEM, pc_MEM;
+    wire [3:0] SrcReg1_MEM, SrcReg2_MEM, DstReg_MEM;
+    wire [15:0] SrcData2_MEM, aluout_MEM, pc_MEM;
 
-    assign regwrite_MEM = regwrite_EX;
-    assign memenable_MEM = memenable_EX;
-    assign memwrite_MEM = memwrite_EX;
-    assign memtoreg_MEM = memtoreg_EX;
-    assign halt_MEM = halt_EX;
-
-    // Forwarding unit (mem-mem)
-    assign SrcReg1_MEM = SrcReg1_EX;
-    assign SrcReg2_MEM = SrcReg2_EX;
-    
-    assign DstReg_MEM = DstReg_EX;
-    assign SrcData2_MEM = SrcData2_EX;
-    assign aluout_MEM = aluout_EX;
-    assign pc_MEM = pc_EX;
+    EX_MEM_pipe ex_mem_pipe(
+        .clk(clk),
+        .rst(rst),
+        .freeze(freeze), // for stalls
+        .regwrite_i(regwrite_EX), .regwrite_o(regwrite_MEM),
+        .memenable_i(memenable_EX), .memenable_o(memenable_MEM),
+        .memwrite_i(memwrite_EX), .memwrite_o(memwrite_MEM),
+        .memtoreg_i(memtoreg_EX), .memtoreg_o(memtoreg_MEM),
+        .halt_i(halt_EX), .halt_o(halt_MEM),
+        .SrcReg1_i(SrcReg1_EX), .SrcReg1_o(SrcReg1_MEM),
+        .SrcReg2_i(SrcReg2_EX), .SrcReg2_o(SrcReg2_MEM),
+        .DstReg_i(DstReg_EX), .DstReg_o(DstReg_MEM),
+        .SrcData2_i(SrcData2_EX), .SrcData2_o(SrcData2_MEM),
+        .aluout_i(aluout_EX), .aluout_o(aluout_MEM),
+        .pc_i(pc_EX), .pc_o(pc_MEM));
 
     // ==== MEMORY module ====
 
@@ -232,16 +227,20 @@ module mod_CPU (
 
     // ==== MEM/WB Pipeline Register ====
     wire regwrite_WB, memtoreg_WB, halt_WB;
-    wire [15:0] DstReg_WB, aluout_WB, mem_WB, pc_WB;
+    wire [3:0] DstReg_WB;
+    wire [15:0] aluout_WB, mem_WB, pc_WB;
 
-    assign DstReg_WB = DstReg_MEM;
-    assign regwrite_WB = regwrite_MEM;
-    assign memtoreg_WB = memtoreg_MEM;
-    assign halt_WB = halt_MEM;
-
-    assign aluout_WB = aluout_MEM;
-    assign mem_WB = mem;
-    assign pc_WB = pc_MEM;
+    MEM_WB_pipe mem_wb_pipe(
+        .clk(clk),
+        .rst(rst),
+        .freeze(freeze), // for stalls
+        .regwrite_i(regwrite_MEM), .regwrite_o(regwrite_WB),
+        .memtoreg_i(memtoreg_MEM), .memtoreg_o(memtoreg_WB),
+        .halt_i(halt_MEM), .halt_o(halt_WB),
+        .DstReg_i(DstReg_MEM), .DstReg_o(DstReg_WB),
+        .aluout_i(aluout_MEM), .aluout_o(aluout_WB),
+        .mem_i(mem), .mem_o(mem_WB),
+        .pc_i(pc_MEM), .pc_o(pc_WB));
 
     // ==== WB module ====
 

@@ -10,14 +10,15 @@
 //      register Rd
 // outputs:
 //      3bit forwarding wires a and b for rs and rt respectively
-module forwarding_unit(xm_regwrite, xm_memread, mw_regwrite, xm_rd, mw_rd, dx_rs, dx_rt, forwarda, forwardb);
+module forwarding_unit(xm_regwrite, xm_memread, mw_regwrite, xm_rd, xm_rt, mw_rd, dx_rs, dx_rt, forwarda, forwardb, forwardmm);
     // inputs
     input xm_regwrite, mw_regwrite, xm_memread;
-    input [3:0] xm_rd, mw_rd, dx_rs, dx_rt;
+    input [3:0] xm_rd, xm_rt, mw_rd, dx_rs, dx_rt;
 
     // outputs
     output [1:0] forwarda; // 2 bit output for xx and mx signals respectively for Rs
-    output [2:0] forwardb; // 3 bit output for mm, xx, and mx signals respectively for Rt
+    output [1:0] forwardb; // 2 bit output for xx, and mx signals respectively for Rt
+    output forwardmm; // 1 bit output for mm signals for Rt
 
 
 
@@ -40,13 +41,15 @@ module forwarding_unit(xm_regwrite, xm_memread, mw_regwrite, xm_rd, mw_rd, dx_rs
 
     assign forwarda = 
         (xm_regwrite & (xm_rd != 0) & (xm_rd == dx_rs)) ? 2'b10 :
-        (mw_regwrite and (mw_rd != 0) and (xm_rd == dx_rs)) ? 2'b01 :
+        (mw_regwrite & (mw_rd != 0) & (xm_rd == dx_rs)) ? 2'b01 :
         2'b00;
     assign forwardb = 
-        (mw_regwrite & (mw_rd != 0) & (mw_rd == xm_rt)) ? 3'b100 :
-        (xm_regwrite & (xm_rd != 0) & (xm_rd == dx_rt)) ? 3'b010 :
-        (mw_regwrite and (mw_rd != 0) and (xm_rd == dx_rt)) ? 3'b001 :
-        3'b000;
+        (xm_regwrite & (xm_rd != 0) & (xm_rd == dx_rt)) ? 2'b10 :
+        (mw_regwrite & (mw_rd != 0) & (xm_rd == dx_rt)) ? 2'b01 :
+        2'b00;
+
+    assign forwardmm = (mw_regwrite & (mw_rd != 0) & (mw_rd == xm_rt)) ? 1 : 0;
+
 
 
 endmodule

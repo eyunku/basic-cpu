@@ -1,4 +1,4 @@
-`include "cpu.v"
+`include "mod_cpu.v"
 module modcpu_tb();
   
 

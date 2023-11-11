@@ -22,7 +22,7 @@ module t_hazard ();
     rst = 1;
     #20;
     rst = 0;
-    dx_memread = 1; fd_memread = 1;
+    dx_memread = 1; fd_memread = 0;
     dx_rt = 4'h1; fd_rs = 4'h1; fd_rt = 4'h1; #20;
     $display("stall signal recieved is %b and %b", stall_sig, rs_dep);
     rst = 0;

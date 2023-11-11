@@ -48,3 +48,57 @@ module t_fd_plreg ();
   end
 
 endmodule
+
+module t_inout ();
+  reg clk, rst, freeze, flush;
+  reg [15:0] pc, instruction;
+  wire [15:0] pc_i, instruction_i;
+  wire [15:0] pc_o, instruction_o;
+
+  assign instruction_i = instruction;
+  assign pc_i = pc;
+  assign instruction_o = instruction_i;
+  assign pc_o = pc_i;
+  
+
+  IF_ID_pl_reg dut (
+        //inputs
+        .clk(clk), 
+        .rst(rst), 
+        .freeze(freeze),
+        .flush(flush),
+        .instruction(instruction_i),
+        .pc(pc_i)
+        );
+
+  initial begin
+    freeze = 0; flush = 0;
+    clk = 0;
+    #5;
+    rst = 1;
+    #20;
+    rst = 0;
+    instruction = 16'h0001; #20;
+    $display("stall signal recieved is %b and %b", instruction_o, pc_o);
+
+    instruction = 16'h0002; pc = 16'h0001; #20;
+    $display("stall signal recieved is %b and %b", instruction_o, pc_o);
+
+    instruction = 16'h0003; pc = 16'h0005; #20;
+    $display("stall signal recieved is %b and %b", instruction_o, pc_o);
+
+    flush = 1;
+    instruction = 16'h0004; pc = 16'h0006; #20;
+    $display("stall signal recieved is %b and %b", instruction_o, pc_o);
+
+    instruction = 16'h0005; pc = 16'h0007; #20;
+    $display("stall signal recieved is %b and %b", instruction_o, pc_o);
+    $stop;
+  end
+  
+  always begin
+    #10;
+    clk = ~clk;
+  end
+
+endmodule

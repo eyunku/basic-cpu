@@ -7,8 +7,8 @@
 `include "pc_control.v"
 `include "pc_register.v"
 `include "pipe_register.v"
-`include "forwarding_logic.v"
-`include "hazard_detection.v"
+// `include "forwarding_logic.v"
+// `include "hazard_detection.v"
 
 
 `include "mod_if.v"
@@ -72,7 +72,8 @@ module mod_CPU (
 
     // ==== FETCH module ====
 
-    parameter freeze = 1'b0;
+    wire freeze;
+    assign freeze = 1'b0;
     // pc reg wires
     wire rst = ~rst_n;
     wire [15:0] pc_in_ID, pc_out_IF;
@@ -85,7 +86,8 @@ module mod_CPU (
         .freeze(freeze),
         .branch(branch_ID),
         .pc_in(pc_in_ID),
-        .pc_out(pc_out_IF),
+        .pc_curr(pc),  // current PC
+        .pc_curr2(pc_out_IF), // current PC + 2
         .instruction(instruction_IF));
 
     // ==== IF/ID Pipeline Register ====
@@ -142,12 +144,12 @@ module mod_CPU (
         .imm_16bit(imm_16bit_ID));
 
     // hazard unit
-    hazard_unit hazard (
-        .fd_memread(MemRead_D), .fd_rs(SrcReg1_ID), .fd_rt(SrcReg2_ID),
-        .dx_rt(DstReg_EX), .dx_memread(memenable_EX & ~memwrite_EX),
-        .stall_sig(),
-        .rs_dep()
-    );
+    // hazard_unit hazard (
+    //     .fd_memread(MemRead_D), .fd_rs(SrcReg1_ID), .fd_rt(SrcReg2_ID),
+    //     .dx_rt(DstReg_EX), .dx_memread(memenable_EX & ~memwrite_EX),
+    //     .stall_sig(),
+    //     .rs_dep()
+    // );
 
     // ==== ID/EX Pipeline Register ====
 
@@ -264,6 +266,4 @@ module mod_CPU (
 
     // set hlt bit
     assign hlt = halt_WB;
-    // TODO pc is set to curr_pc + 2
-    assign pc = pc_WB;
 endmodule

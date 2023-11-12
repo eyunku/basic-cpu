@@ -1,7 +1,7 @@
 // pc_control.v
 
 // pc contorl for all branch conditions
-module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
+module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out, taken);
   //inputs
   input [1:0] bsig; // 00 = PC + 2, 01 = PC + 2 + I, 10 = regsrc, 11 = HLT
   input [2:0] C, F; // C ccc, F flag reg
@@ -10,7 +10,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
 
   //output
   output [15:0] PC_out; // PC_out updated PC
-  output br_truth;
+  output taken;
 
 
   // Can branch? (ccc is fufilled)
@@ -39,8 +39,8 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
       3'b111: truth = 1;
     endcase
   end
+  assign taken = truth & (bsig == 2'b01 | bsig == 2'b10);
 
-  assign br_truth = truth;
 
   wire [15:0] signext_imm;
   assign signext_imm = I[9] ? {6'b111111, I[9:0]} : {6'b000000, I[9:0]};

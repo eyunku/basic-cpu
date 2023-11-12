@@ -10,6 +10,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
 
   //output
   output [15:0] PC_out; // PC_out updated PC
+  output br_truth;
 
 
   // Can branch? (ccc is fufilled)
@@ -39,28 +40,29 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
     endcase
   end
 
+  assign br_truth = truth;
 
   wire [15:0] signext_imm;
   assign signext_imm = I[9] ? {6'b111111, I[9:0]} : {6'b000000, I[9:0]};
 
-  wire [15:0] sum2;
+  wire [15:0] sub2;
   wire [15:0] b_out;
   wire ovfl2;
   wire ovfl_add;
   reg [15:0] out;
 
-  carry_lookahead add_two(.sum(sum2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(1'b0));
-  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(sum2), .b(signext_imm), .mode(1'b0));
+  carry_lookahead add_two(.sum(sub2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(1'b1));
+  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(PC_in), .b(signext_imm), .mode(1'b0));
 
   // case statement for branch signal
   // 00: no branch, 01: b, 10: br, 11: hlt
   // must evaluate whether branching is true or not, if it isnt we just run the sum2
   always @(*) begin
     case (bsig)
-      2'b00: out = sum2;
-      2'b01: out = truth ? b_out: sum2;
-      2'b10: out = truth ? regsrc: sum2;
-      2'b11: out = PC_in;
+      2'b00: out = PC_in;
+      2'b01: out = truth ? b_out: PC_in;
+      2'b10: out = truth ? regsrc: PC_in;
+      2'b11: out = sub2;
     endcase
   end
   

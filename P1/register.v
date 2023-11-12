@@ -1,6 +1,8 @@
 // register.v
 
-module ReadDecoder_4_16(input [3:0] RegId, output [15:0] Wordline);
+module ReadDecoder_4_16(
+    input [3:0] RegId, 
+    output [15:0] Wordline);
 wire b1;
 wire [8:0] b9;
 wire [12:0] bc;
@@ -13,7 +15,10 @@ assign be = RegId[1] ? {bc, 2'b00} : {2'b00, bc};
 assign Wordline = RegId[0] ? {be, 1'b0} : {1'b0, be};
 endmodule
 
-module WriteDecoder_4_16(input [3:0] RegId, input WriteReg, output [15:0] Wordline);
+module WriteDecoder_4_16(
+    input [3:0] RegId, 
+    input WriteReg, 
+    output [15:0] Wordline);
 // temp wires for holding the combined input
 wire b1;
 wire [8:0] b9;
@@ -29,7 +34,8 @@ assign bf = RegId[0] ? {be, 1'b0} : {1'b0, be};
 assign Wordline = WriteReg ? bf : 16'b0000000000000000;
 endmodule
 
-module BitCell (input clk,  input rst, input D, input WriteEnable, input ReadEnable1, input ReadEnable2, inout Bitline1, inout Bitline2);
+module BitCell (input clk, rst, D, WriteEnable, ReadEnable1, ReadEnable2, 
+                inout Bitline1, Bitline2);
 // based on the decodings we return the contents of the registers needed
 wire w1;
 
@@ -40,7 +46,10 @@ assign Bitline2 = ReadEnable2 ? w1: 1'bz;
 endmodule
 
 
-module Register (input clk,  input rst, input [15:0] D, input WriteReg, input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, inout [15:0] Bitline2);
+module Register (
+    input clk, rst, WriteReg, ReadEnable1, ReadEnable2,
+    input [15:0] D, 
+    inout [15:0] Bitline1, Bitline2);
 BitCell b1(.clk(clk), .rst(rst), .D(D[0]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[0]), .Bitline2(Bitline2[0]));
 BitCell b2(.clk(clk), .rst(rst), .D(D[1]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[1]), .Bitline2(Bitline2[1]));
 BitCell b3(.clk(clk), .rst(rst), .D(D[2]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[2]), .Bitline2(Bitline2[2]));
@@ -59,22 +68,19 @@ BitCell b15(.clk(clk), .rst(rst), .D(D[14]), .WriteEnable(WriteReg), .ReadEnable
 BitCell b16(.clk(clk), .rst(rst), .D(D[15]), .WriteEnable(WriteReg), .ReadEnable1(ReadEnable1), .ReadEnable2(ReadEnable2), .Bitline1(Bitline1[15]), .Bitline2(Bitline2[15]));
 endmodule
 
-module Register0 (input ReadEnable1, input ReadEnable2, inout [15:0] Bitline1, inout [15:0] Bitline2);
+module Register0 (
+    input ReadEnable1, ReadEnable2, 
+    inout [15:0] Bitline1, Bitline2);
+
   assign Bitline1 = ReadEnable1 ? 16'b0 : 16'bz;
   assign Bitline2 = ReadEnable2 ? 16'b0 : 16'bz;
 endmodule
 
-module RegisterFile(clk, rst, SrcReg1, SrcReg2, DstReg, WriteReg, DstData, SrcData1, SrcData2);
-  // inputs
-  input clk, rst;
-  input [3:0] SrcReg1, SrcReg2, DstReg;
-  input WriteReg;
-  input [15:0] DstData;
-
-  // outputs
-  inout [15:0] SrcData1;
-  inout [15:0] SrcData2;
-
+module RegisterFile(
+    input clk, rst, WriteReg,
+    input [3:0] SrcReg1, SrcReg2, DstReg, 
+    input [15:0] DstData, 
+    inout [15:0] SrcData1, SrcData2);
 
   // decode instruction input
   wire [15:0] w_ren1, w_ren2, w_wen;

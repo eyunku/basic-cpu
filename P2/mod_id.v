@@ -8,6 +8,7 @@ module mod_ID (
         input [2:0] flag,
         input [3:0] DstReg_in,
         input [15:0] instruction, pc, DstData,
+        input regwrite_wb,
         output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt, taken,
         output [1:0] branch,
         output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
@@ -61,8 +62,8 @@ module mod_ID (
         .rst(rst), 
         .SrcReg1(SrcReg1), 
         .SrcReg2(SrcReg2), 
-        .DstReg(DstReg_out), 
-        .WriteReg(regwrite), 
+        .DstReg(DstReg_in), 
+        .WriteReg(regwrite_wb), 
         .DstData(DstData), 
         .SrcData1(out1), 
         .SrcData2(out2)

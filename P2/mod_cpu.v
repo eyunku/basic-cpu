@@ -63,7 +63,7 @@
 // ==== WRITEBACK stage ====
 // PC and halt are set at writeback
 
-// Clean up PCS path
+// TODO add nop
 
 module mod_CPU (
         input clk, rst_n,
@@ -126,6 +126,7 @@ module mod_CPU (
         .instruction(instruction_ID),
         .pc(pc_out_IF),
         .DstData(DstData_WB),
+        .regwrite_wb(regwrite_WB),
         .regwrite(regwrite_ID),
         .alusrc(alusrc_ID),
         .memenable(memenable_ID),

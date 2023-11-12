@@ -8,7 +8,7 @@
 `include "pc_register.v"
 `include "pipe_register.v"
 // `include "forwarding_logic.v"
-// `include "hazard_detection.v"
+`include "hazard_detection.v"
 
 
 `include "mod_if.v"
@@ -143,13 +143,29 @@ module mod_CPU (
         .new_pc(pc_in_ID),
         .imm_16bit(imm_16bit_ID));
 
-    // hazard unit
-    // hazard_unit hazard (
-    //     .fd_memread(MemRead_D), .fd_rs(SrcReg1_ID), .fd_rt(SrcReg2_ID),
-    //     .dx_rt(DstReg_EX), .dx_memread(memenable_EX & ~memwrite_EX),
-    //     .stall_sig(),
-    //     .rs_dep()
-    // );
+    // Hazard Unit
+    wire fd_memwrite;
+    wire dx_memread;
+
+    assign fd_memwrite = memenable_ID & memwrite_ID;
+    assign dx_memread = (memenable_EX & ~memwrite_EX);
+
+    hazard_unit dut (
+        .fd_memwrite(fd_memwrite), 
+        .fd_regwrite(regwrite_ID), 
+        .fd_alusrc(alusrc_ID), 
+        .fd_branchtaken(branchtaken_ID), 
+        .dx_memread(dx_memread), 
+        .dx_regwrite(regwrite_EX), 
+        .xm_regwrite(regwrite_MEM), 
+        .branch(branch_ID), 
+        .fd_rs(SrcReg1_ID), 
+        .fd_rt(SrcReg2_ID), 
+        .dx_rd(DstReg_EX), 
+        .xm_rd(DstReg_MEM), 
+        .fd_opcode(instruction_ID[3:0]), 
+        .stall_sig(stall_sig)
+    );
 
     // ==== ID/EX Pipeline Register ====
 

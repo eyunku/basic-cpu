@@ -2,16 +2,25 @@
 module mod_EX (
         input clk, rst,
         input alusrc, memenable, pcread,
-        input [1:0] branch,
+        input [1:0] branch, forward_aluin1, forward_aluin2,
         input [3:0] aluop,
+        input [15:0] forward_DstData_MEM, forward_DstData_WB,
         input [15:0] SrcData1, SrcData2, imm_16bit,
         output [15:0] aluout,
         output [2:0] flag_out
     );
 
     // For LW or SW, effective address = ([rs] & 0xFFE) + (imm << 1)
-    wire [15:0] aluin1 = memenable ? (SrcData1 & 16'hFFFE) : SrcData1;
-    wire [15:0] aluin2 = alusrc ? (memenable ? (imm_16bit << 1) : imm_16bit) : SrcData2;
+
+    wire [15:0] aluin1, aluin2, aluin1_SrcData, aluin2_SrcData;
+
+    assign aluin1_SrcData = (forward_aluin1 == 2'b00) ? SrcData1 :
+                            (forward_aluin1 == 2'b01) ? forward_DstData_MEM : forward_DstData_WB;
+    assign aluin2_SrcData = (forward_aluin2 == 2'b00) ? SrcData2 :
+                            (forward_aluin2 == 2'b01) ? forward_DstData_MEM : forward_DstData_WB;
+
+    assign aluin1 = memenable ? (aluin1_SrcData & 16'hFFFE) : aluin1_SrcData;
+    assign aluin2 = alusrc ? (memenable ? (imm_16bit << 1) : imm_16bit) : aluin2_SrcData;
 
     wire err;
     wire [2:0] flag_in;
@@ -32,7 +41,8 @@ module mod_EX (
         .flag_out(flag_out)
     );
 
-    wire keep_flag = branch[0] | branch[1] | pcread;
+    wire keep_flag;
+    assign keep_flag = branch[0] | branch[1] | pcread;
 
     // Update flags (flag = NVZ)
     assign flag_in[2] = keep_flag ? flag_out[2] :

@@ -7,7 +7,7 @@
 `include "pc_control.v"
 `include "pc_register.v"
 `include "pipe_register.v"
-// `include "forwarding_logic.v"
+`include "forwarding_logic.v"
 `include "hazard_detection.v"
 
 
@@ -204,7 +204,8 @@ module mod_CPU (
         .SrcData1_i(SrcData1_ID), .SrcData1_o(SrcData1_EX),
         .SrcData2_i(SrcData2_ID), .SrcData2_o(SrcData2_EX),
         .imm_16bit_i(imm_16bit_ID), .imm_16bit_o(imm_16bit_EX),
-        .pc_i(pc_in_ID), .pc_o(pc_EX));
+        .pc_i(pc_in_ID), .pc_o(pc_EX)
+    );
 
     // ==== EXECUTION module ====
 
@@ -218,14 +219,36 @@ module mod_CPU (
         .rst(rst),
         .alusrc(alusrc_EX),
         .memenable(memenable_EX),
-        .branch(branch_EX),
         .pcread(pcread_EX),
+        .branch(branch_EX),
+        .forward_aluin1(forward_aluin1),
+        .forward_aluin2(forward_aluin2),
         .aluop(aluop_EX),
+        .forward_DstData_MEM(aluout_MEM),
+        .forward_DstData_WB(DstData_WB),
         .SrcData1(SrcData1_EX),
         .SrcData2(SrcData2_EX),
         .imm_16bit(imm_16bit_EX),
         .aluout(aluout_EX),
-        .flag_out(flag_out));
+        .flag_out(flag_out)
+    );
+
+    wire forward_mm;
+    wire [1:0] forward_aluin1, forward_aluin2;
+
+    forwarding_unit forward(
+        .xm_regwrite(regwrite_MEM),
+        .xm_memwrite(memenable_MEM & memwrite_MEM),
+        .mw_regwrite(regwrite_WB),
+        .xm_rd(DstReg_MEM),
+        .xm_rt(SrcReg2_MEM),
+        .mw_rd(DstReg_WB),
+        .dx_rs(SrcReg1_EX),
+        .dx_rt(SrcReg2_EX),
+        .forwardmm(forward_mm),
+        .forwarda(forward_aluin1),
+        .forwardb(forward_aluin2)
+    );
 
     // ==== EX/MEM Pipeline Register ====
     wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
@@ -248,7 +271,6 @@ module mod_CPU (
         .pc_i(pc_EX), .pc_o(pc_MEM));
 
     // ==== MEMORY module ====
-
     wire [15:0] mem;
 
     mod_MEM mod_mem(
@@ -256,7 +278,9 @@ module mod_CPU (
         .rst(rst),
         .memenable(memenable_MEM),
         .memwrite(memwrite_MEM),
+        .forward_mm(forward_mm),
         .memdata(SrcData2_MEM),
+        .memdata_forward(DstData_WB),
         .addr(aluout_MEM),
         .mem_out(mem));
 

@@ -45,9 +45,11 @@ module mod_ID (
 
     // dst and src reg assignment
     assign DstReg_out = instruction[11:8];
-    assign SrcReg1 = rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
+    assign SrcReg1 = pcread ? 4'h0 : 
+                     rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
     // SW case, use SrcReg2 for reading register "rt"
-    assign SrcReg2 = (memenable & memwrite) ? DstReg_out : instruction[3:0];
+    assign SrcReg2 = pcread ? 4'h0 : 
+                     memenable & memwrite ? DstReg_out : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};
@@ -67,7 +69,6 @@ module mod_ID (
     );
 
     assign SrcData1 = pcread ? pc : out1;
-    assign SrcData2 = pcread ? 16'h0 : out2;
 
     // PC control
     assign C = instruction[11:9];

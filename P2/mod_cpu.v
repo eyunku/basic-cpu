@@ -70,7 +70,7 @@ module mod_CPU (
         output hlt,
         output [15:0] pc);
 
-    // ==== FETCH module ====
+    // ==== FETCH stage wires ====
 
     wire freeze_ID;
     wire nop_ID;
@@ -80,6 +80,68 @@ module mod_CPU (
     wire [15:0] pc_in_ID, pc_out_IF;
     // instruction memory wires
     wire [15:0] instruction_IF;
+
+    // pipeline wires
+    wire [15:0] instruction_ID, pc_out_ID;
+
+    // ==== DECODE stage wires ====
+
+    // wires for CONTROL UNIT
+    wire regwrite_ID, alusrc_ID, memenable_ID, memwrite_ID, memtoreg_ID, pcread_ID, alusext_ID, rdsrc_ID, halt_ID;
+    wire [1:0] branch_ID;
+    wire [3:0] aluop_ID;
+
+    // wires for DECODE
+    // reg wires
+    wire [3:0] SrcReg1_ID, SrcReg2_ID, DstReg_out_ID;
+    wire [15:0] SrcData1_ID, SrcData2_ID;
+    wire [15:0] imm_16bit_ID;
+    wire [15:0] DstData_WB;
+
+    // Hazard Unit
+    wire fd_memwrite;
+    wire dx_memread;
+    wire stall_sig;
+
+    // pipeline wires
+    wire alusrc_EX, regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
+    wire [1:0] branch_EX;
+    wire [3:0] aluop_EX;
+
+    // Wires for forwarding + data hazard unit
+    wire [3:0] SrcReg1_EX, SrcReg2_EX;
+
+    wire [3:0] DstReg_EX;
+    wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX, pc_EX;
+
+    // ==== EXECUTION stage wires ====
+
+    // wires for flag reg
+    wire [2:0] flag_out;
+    // wires for alu
+    wire [15:0] aluout_EX;
+
+    // fowarding wires
+    wire forward_mm;
+    wire [1:0] forward_aluin1, forward_aluin2;
+
+    // pipeline registers
+    wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
+    wire [3:0] SrcReg1_MEM, SrcReg2_MEM, DstReg_MEM;
+    wire [15:0] SrcData2_MEM, aluout_MEM, pc_MEM;
+
+    // ==== MEMORY stage wires ====
+    wire [15:0] mem;
+
+    // pipeline wires
+    wire regwrite_WB, memtoreg_WB, halt_WB;
+    wire [3:0] DstReg_WB;
+    wire [15:0] aluout_WB, mem_WB, pc_WB;
+
+
+
+
+    // ==== FETCH module ====
 
     mod_F mod_f(
         .clk(clk),
@@ -93,8 +155,6 @@ module mod_CPU (
 
     // ==== IF/ID Pipeline Register ====
 
-    wire [15:0] instruction_ID, pc_out_ID;
-
     IF_ID_pipe if_id_pipe(
         .clk(clk),
         .rst(rst),
@@ -103,19 +163,10 @@ module mod_CPU (
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
 
+
+
+
     // ==== DECODE module ====
-
-    // wires for CONTROL UNIT
-    wire regwrite_ID, alusrc_ID, memenable_ID, memwrite_ID, memtoreg_ID, pcread_ID, alusext_ID, rdsrc_ID, halt_ID;
-    wire [1:0] branch_ID;
-    wire [3:0] aluop_ID;
-
-    // wires for DECODE
-    // reg wires
-    wire [3:0] SrcReg1_ID, SrcReg2_ID, DstReg_out_ID;
-    wire [15:0] SrcData1_ID, SrcData2_ID;
-    wire [15:0] imm_16bit_ID;
-    wire [15:0] DstData_WB;
 
     // module for decode stage
     mod_ID mod_id(
@@ -146,10 +197,6 @@ module mod_CPU (
         .imm_16bit(imm_16bit_ID),
         .taken(taken_ID));
 
-    // Hazard Unit
-    wire fd_memwrite;
-    wire dx_memread;
-    wire stall_sig;
 
     assign fd_memwrite = memenable_ID & memwrite_ID;
     assign dx_memread = (memenable_EX & ~memwrite_EX);
@@ -176,16 +223,6 @@ module mod_CPU (
 
     // ==== ID/EX Pipeline Register ====
 
-    wire alusrc_EX, regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
-    wire [1:0] branch_EX;
-    wire [3:0] aluop_EX;
-
-    // Wires for forwarding + data hazard unit
-    wire [3:0] SrcReg1_EX, SrcReg2_EX;
-
-    wire [3:0] DstReg_EX;
-    wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX, pc_EX;
-
     ID_EX_pipe id_ex_pipe(
         .clk(clk),
         .rst(rst),
@@ -208,12 +245,9 @@ module mod_CPU (
         .pc_i(pc_in_ID), .pc_o(pc_EX)
     );
 
-    // ==== EXECUTION module ====
 
-    // wires for flag reg
-    wire [2:0] flag_out;
-    // wires for alu
-    wire [15:0] aluout_EX;
+
+    // ==== EXECUTION module ====
 
     mod_EX mod_ex(
         .clk(clk),
@@ -234,9 +268,6 @@ module mod_CPU (
         .flag_out(flag_out)
     );
 
-    wire forward_mm;
-    wire [1:0] forward_aluin1, forward_aluin2;
-
     forwarding_unit forward(
         .xm_regwrite(regwrite_MEM),
         .xm_memwrite(memenable_MEM & memwrite_MEM),
@@ -252,9 +283,6 @@ module mod_CPU (
     );
 
     // ==== EX/MEM Pipeline Register ====
-    wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
-    wire [3:0] SrcReg1_MEM, SrcReg2_MEM, DstReg_MEM;
-    wire [15:0] SrcData2_MEM, aluout_MEM, pc_MEM;
 
     EX_MEM_pipe ex_mem_pipe(
         .clk(clk),
@@ -271,8 +299,11 @@ module mod_CPU (
         .aluout_i(aluout_EX), .aluout_o(aluout_MEM),
         .pc_i(pc_EX), .pc_o(pc_MEM));
 
+
+
+
+
     // ==== MEMORY module ====
-    wire [15:0] mem;
 
     mod_MEM mod_mem(
         .clk(clk),
@@ -286,9 +317,6 @@ module mod_CPU (
         .mem_out(mem));
 
     // ==== MEM/WB Pipeline Register ====
-    wire regwrite_WB, memtoreg_WB, halt_WB;
-    wire [3:0] DstReg_WB;
-    wire [15:0] aluout_WB, mem_WB, pc_WB;
 
     MEM_WB_pipe mem_wb_pipe(
         .clk(clk),
@@ -300,6 +328,10 @@ module mod_CPU (
         .aluout_i(aluout_MEM), .aluout_o(aluout_WB),
         .mem_i(mem), .mem_o(mem_WB),
         .pc_i(pc_MEM), .pc_o(pc_WB));
+
+
+
+
 
     // ==== WB module ====
 

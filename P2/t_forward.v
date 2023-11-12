@@ -29,9 +29,27 @@ module t_forward ();
     #20
     $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
     
-    // forward 
-    rd_MEM = 4'h2; rd_WB = 4'h1;
     // forwarda = 10, forwardb = 01, forwardmm = 1
+    // Test for forwarding from different stages
+    rd_MEM = 4'h2; rd_WB = 4'h1;
+    #20
+    $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
+
+    // forwarda = 00, forwardb = 00, forwardmm = 1
+    // test for no forwarding by changing rd or deasserting regwrite signal
+    rs_EX = 4'h3; regwrite_MEM = 1'b0;
+    #20
+    $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
+
+    // forwarda = 10, forwardb = 10, forwardmm = 0
+    // test for forwarding on same stage
+    rs_EX = 4'h2; rt_EX = 4'h2; rd_WB = 4'h2;
+    #20
+    $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
+
+    // forwarda = 01, forwardb = 01, forwardmm = 0
+    // test for conflicting forwarding, can forward xx or mx
+    rs_EX = 4'h2; rt_EX = 4'h2; regwrite_MEM = 1'b1;
     #20
     $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
     $stop;

@@ -206,16 +206,16 @@ module cpu_tb();
    assign WriteData = DUT.DstData_WB;
    // Data being written to the register. (16 bits)
    
-   assign MemRead = (DUT.memenable_EX & ~DUT.memwrite_EX);
+   assign MemRead = (DUT.memenable_MEM & ~DUT.memwrite_MEM);
    // Is memory being read, one bit signal (1 means yes, 0 means no)
    
-   assign MemWrite = (DUT.memenable_EX & DUT.memwrite_EX);
+   assign MemWrite = (DUT.memenable_MEM & DUT.memwrite_MEM);
    // Is memory being written to (1 bit signal)
    
-   assign MemAddress = DUT.aluout_WB;
+   assign MemAddress = DUT.mod_mem.addr;
    // Address to access memory with (for both reads and writes to memory, 16 bits)
    
-   assign MemData = DUT.SrcData2_EX;
+   assign MemData = DUT.mod_mem.data_in;
    // Data to be written to memory for memory writes (16 bits)
    
 //   assign Halt = DUT.memory0.halt; //You won't need this because it's part of the main cpu interface

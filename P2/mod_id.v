@@ -8,7 +8,8 @@ module mod_ID (
         input [2:0] flag,
         input [3:0] DstReg_in,
         input [15:0] instruction, pc, DstData,
-        output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt,
+        input regwrite_wb,
+        output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt, taken,
         output [1:0] branch,
         output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
         output [15:0] SrcData1, SrcData2, new_pc, imm_16bit);
@@ -45,9 +46,11 @@ module mod_ID (
 
     // dst and src reg assignment
     assign DstReg_out = instruction[11:8];
-    assign SrcReg1 = rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
+    assign SrcReg1 = pcread ? 4'h0 : 
+                     rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
     // SW case, use SrcReg2 for reading register "rt"
-    assign SrcReg2 = (memenable & memwrite) ? DstReg_out : instruction[3:0];
+    assign SrcReg2 = pcread ? 4'h0 : 
+                     memenable & memwrite ? DstReg_out : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};
@@ -59,15 +62,14 @@ module mod_ID (
         .rst(rst), 
         .SrcReg1(SrcReg1), 
         .SrcReg2(SrcReg2), 
-        .DstReg(DstReg_out), 
-        .WriteReg(regwrite), 
+        .DstReg(DstReg_in), 
+        .WriteReg(regwrite_wb), 
         .DstData(DstData), 
         .SrcData1(out1), 
         .SrcData2(out2)
     );
 
     assign SrcData1 = pcread ? pc : out1;
-    assign SrcData2 = pcread ? 16'h0 : out2;
 
     // PC control
     assign C = instruction[11:9];
@@ -81,7 +83,8 @@ module mod_ID (
         .F(F), 
         .regsrc(SrcData1), 
         .PC_in(pc), 
-        .PC_out(new_pc)
+        .PC_out(new_pc),
+        .taken(taken)
     );
 
     assign halt = branch == 2'b11;

@@ -10,6 +10,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
 
   //output
   output [15:0] PC_out; // PC_out updated PC
+  output br_truth;
 
 
   // Can branch? (ccc is fufilled)
@@ -39,6 +40,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out);
     endcase
   end
 
+  assign br_truth = truth;
 
   wire [15:0] signext_imm;
   assign signext_imm = I[9] ? {6'b111111, I[9:0]} : {6'b000000, I[9:0]};

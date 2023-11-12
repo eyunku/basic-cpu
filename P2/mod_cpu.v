@@ -72,8 +72,8 @@ module mod_CPU (
 
     // ==== FETCH module ====
 
-    wire freeze;
-    assign freeze = 1'b0;
+    wire freeze_ID;
+    wire nop_ID;
     // pc reg wires
     wire rst = ~rst_n;
     wire [15:0] pc_in_ID, pc_out_IF;
@@ -83,7 +83,7 @@ module mod_CPU (
     mod_F mod_f(
         .clk(clk),
         .rst(rst),
-        .freeze(freeze),
+        .freeze(freeze_ID),
         .branch(branch_ID),
         .pc_in(pc_in_ID),
         .pc_curr(pc),  // current PC
@@ -98,7 +98,7 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flush(1'b0), // TODO: for branch not taken
-        .freeze(freeze), // for stalls
+        .freeze(freeze_ID), // for stalls
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
 
@@ -146,11 +146,12 @@ module mod_CPU (
     // Hazard Unit
     wire fd_memwrite;
     wire dx_memread;
+    wire stall_sig;
 
     assign fd_memwrite = memenable_ID & memwrite_ID;
     assign dx_memread = (memenable_EX & ~memwrite_EX);
 
-    hazard_unit dut (
+    hazard_unit hazard (
         .fd_memwrite(fd_memwrite), 
         .fd_regwrite(regwrite_ID), 
         .fd_alusrc(alusrc_ID), 
@@ -167,6 +168,9 @@ module mod_CPU (
         .stall_sig(stall_sig)
     );
 
+    assign freeze_ID = stall_sig;
+    assign nop_ID = stall_sig;
+
     // ==== ID/EX Pipeline Register ====
 
     wire alusrc_EX, regwrite_EX, memenable_EX, memwrite_EX, memtoreg_EX, pcread_EX, halt_EX;
@@ -182,7 +186,7 @@ module mod_CPU (
     ID_EX_pipe id_ex_pipe(
         .clk(clk),
         .rst(rst),
-        .freeze(freeze), // for stalls
+        .flush(nop_ID), // for stalls
         .alusrc_i(alusrc_ID), .alusrc_o(alusrc_EX),
         .regwrite_i(regwrite_ID), .regwrite_o(regwrite_EX),
         .memenable_i(memenable_ID), .memenable_o(memenable_EX),
@@ -229,7 +233,6 @@ module mod_CPU (
     EX_MEM_pipe ex_mem_pipe(
         .clk(clk),
         .rst(rst),
-        .freeze(freeze), // for stalls
         .regwrite_i(regwrite_EX), .regwrite_o(regwrite_MEM),
         .memenable_i(memenable_EX), .memenable_o(memenable_MEM),
         .memwrite_i(memwrite_EX), .memwrite_o(memwrite_MEM),
@@ -263,7 +266,6 @@ module mod_CPU (
     MEM_WB_pipe mem_wb_pipe(
         .clk(clk),
         .rst(rst),
-        .freeze(freeze), // for stalls
         .regwrite_i(regwrite_MEM), .regwrite_o(regwrite_WB),
         .memtoreg_i(memtoreg_MEM), .memtoreg_o(memtoreg_WB),
         .halt_i(halt_MEM), .halt_o(halt_WB),

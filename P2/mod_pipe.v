@@ -23,7 +23,7 @@ endmodule
 * reg -> rd, rs, rt     WHY ARE THERE TWO RT REGISTERS
 */
 module ID_EX_pipe(
-        input clk, rst, freeze,
+        input clk, rst, flush,
         input  alusrc_i, regwrite_i, memenable_i, memwrite_i, memtoreg_i, pcread_i, halt_i,
         output alusrc_o, regwrite_o, memenable_o, memwrite_o, memtoreg_o, pcread_o, halt_o,
         input  [1:0] branch_i,
@@ -33,7 +33,7 @@ module ID_EX_pipe(
         input  [15:0] SrcData1_i, SrcData2_i, imm_16bit_i, pc_i,
         output [15:0] SrcData1_o, SrcData2_o, imm_16bit_o, pc_o);
 
-    parameter flush = 1'b0;
+    parameter freeze = 1'b0;
 
     pipe_1b_reg id_ex_alusrc(.src(alusrc_i), .dst(alusrc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_1b_reg id_ex_regwrite(.src(regwrite_i), .dst(regwrite_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
@@ -64,7 +64,7 @@ endmodule
 * register: rd or rt reg
 */
 module EX_MEM_pipe(
-        input clk, rst, freeze,
+        input clk, rst,
         input  regwrite_i, memenable_i, memwrite_i, memtoreg_i, halt_i,
         output regwrite_o, memenable_o, memwrite_o, memtoreg_o, halt_o,
         input  [3:0] SrcReg1_i, SrcReg2_i, DstReg_i,
@@ -73,6 +73,7 @@ module EX_MEM_pipe(
         output [15:0] SrcData2_o, aluout_o, pc_o);
 
     parameter flush = 1'b0;
+    parameter freeze = 1'b0;
 
     pipe_1b_reg ex_mem_regwrite(.src(regwrite_i), .dst(regwrite_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_1b_reg ex_mem_memenable(.src(memenable_i), .dst(memenable_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
@@ -90,7 +91,7 @@ module EX_MEM_pipe(
 endmodule
 
 module MEM_WB_pipe(
-        input clk, rst, freeze,
+        input clk, rst,
         input  regwrite_i, memtoreg_i, halt_i,
         output regwrite_o, memtoreg_o, halt_o,
         input  [3:0] DstReg_i,
@@ -99,6 +100,7 @@ module MEM_WB_pipe(
         output [15:0] aluout_o, mem_o, pc_o);
 
     parameter flush = 1'b0;
+    parameter freeze = 1'b0;
 
     pipe_1b_reg mem_wb_regwrite(.src(regwrite_i), .dst(regwrite_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_1b_reg mem_wb_memtoreg(.src(memtoreg_i), .dst(memtoreg_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));

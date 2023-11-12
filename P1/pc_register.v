@@ -1,16 +1,17 @@
 // special pc 16bit register
 `include "dff.v"
 
-module pc_16bit_reg (clk, rst, freeze_n, pc_in, pc_out);
+// TODO: freeze or freeze_n ?
+module pc_16bit_reg (clk, rst, freeze, pc_in, pc_out);
     // input
-    input clk, rst, freeze_n;
+    input clk, rst, freeze;
     input [15:0] pc_in;
     // output
     output [15:0] pc_out;
 
     wire [15:0] hanging;
     wire wen;
-    assign wen = ~freeze_n;
+    assign wen = ~freeze;
   
     dff b0 (.q(pc_out[0]), .d(pc_in[0]), .wen(wen), .clk(clk), .rst(rst));
     dff b1 (.q(pc_out[1]), .d(pc_in[1]), .wen(wen), .clk(clk), .rst(rst));

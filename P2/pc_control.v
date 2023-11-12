@@ -41,6 +41,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out, taken);
   end
   assign taken = truth & (bsig == 2'b01 | bsig == 2'b10);
 
+  assign br_truth = truth;
 
   wire [15:0] signext_imm;
   assign signext_imm = I[9] ? {6'b111111, I[9:0]} : {6'b000000, I[9:0]};

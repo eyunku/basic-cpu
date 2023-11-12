@@ -9,19 +9,17 @@
 //      register Rs and Rt from 
 //      register Rd
 // outputs:
-//      3bit forwarding wires a and b for rs and rt respectively
-module forwarding_unit(xm_regwrite, xm_memread, mw_regwrite, xm_rd, xm_rt, mw_rd, dx_rs, dx_rt, forwarda, forwardb, forwardmm);
-    // inputs
-    input xm_regwrite, mw_regwrite, xm_memread;
-    input [3:0] xm_rd, xm_rt, mw_rd, dx_rs, dx_rt;
+//      2bit forwarding wires a and b for rs and rt respectively
+module forwarding_unit(
+    input xm_regwrite, xm_memwrite, mw_regwrite,
+    input [3:0] xm_rd, xm_rt, mw_rd, dx_rs, dx_rt,
+    output forwardmm,
+    output [1:0] forwarda, forwardb);
 
     // outputs
-    output [1:0] forwarda; // 2 bit output for xx and mx signals respectively for Rs
-    output [1:0] forwardb; // 2 bit output for xx, and mx signals respectively for Rt
-    output forwardmm; // 1 bit output for mm signals for Rt
-
-
-
+    // 2 bit output for xx and mx signals respectively for Rs
+    // 2 bit output for xx, and mx signals respectively for Rt
+    // 1 bit output for mm signals for Rt
 
     // MEM to MEM
     // if (MEM/WB.RegWrite and (MEM/WB.RegisterRd ≠ 0) and (MEM/WB.RegisterRd = EX/MEM.RegisterRt)), then ForwardB100
@@ -40,16 +38,14 @@ module forwarding_unit(xm_regwrite, xm_memread, mw_regwrite, xm_rd, xm_rt, mw_rd
 
 
     assign forwarda = 
-        (xm_regwrite & (xm_rd != 0) & (xm_rd == dx_rs)) ? 2'b10 :
-        (mw_regwrite & (mw_rd != 0) & (xm_rd == dx_rs)) ? 2'b01 :
+        (xm_regwrite & (xm_rd != 4'h0) & (xm_rd == dx_rs)) ? 2'b01 : // logic for xx forwarding
+        (mw_regwrite & (mw_rd != 4'h0) & (mw_rd == dx_rs)) ? 2'b10 : // logic for mx forwarding
         2'b00;
     assign forwardb = 
-        (xm_regwrite & (xm_rd != 0) & (xm_rd == dx_rt)) ? 2'b10 :
-        (mw_regwrite & (mw_rd != 0) & (xm_rd == dx_rt)) ? 2'b01 :
+        (xm_regwrite & (xm_rd != 4'h0) & (xm_rd == dx_rt)) ? 2'b01 :
+        (mw_regwrite & (mw_rd != 4'h0) & (mw_rd == dx_rt)) ? 2'b10 :
         2'b00;
 
-    assign forwardmm = (mw_regwrite & (mw_rd != 0) & (mw_rd == xm_rt)) ? 1 : 0;
-
-
+    assign forwardmm = (xm_memwrite & mw_regwrite & (mw_rd != 4'h0) & (mw_rd == xm_rt)) ? 1 : 0;
 
 endmodule

@@ -1,52 +1,44 @@
+`include "forwarding_logic.v"
+
 module t_forward ();
-  reg clk, rst, xm_regwrite, mw_regwrite, xm_memread;
-  reg [3:0] xm_rd, xm_rt, mw_rd, dx_rs, dx_rt;
+  reg clk, rst, regwrite_MEM, regwrite_WB, memwrite_MEM;
+  reg [3:0] rd_MEM, rt_MEM, rd_WB, rs_EX, rt_EX;
   wire [1:0] forwarda;
   wire [1:0] forwardb;
   wire forwardmm;
 
   forwarding_unit dut (
-    .xm_regwrite(xm_regwrite),
-    .mw_regwrite(mw_regwrite),
-    .xm_memread(xm_memread),
-    .xm_rd(xm_rd),
-    .xm_rt(xm_rt),
-    .mw_rd(mw_rd),
-    .dx_rs(dx_rs),
-    .dx_rt(dx_rt),
+    .xm_regwrite(regwrite_MEM),
+    .mw_regwrite(regwrite_WB),
+    .xm_memwrite(memwrite_MEM),
+    .xm_rd(rd_MEM),
+    .xm_rt(rt_MEM),
+    .mw_rd(rd_WB),
+    .dx_rs(rs_EX),
+    .dx_rt(rt_EX),
     .forwarda(forwarda),
     .forwardb(forwardb),
     .forwardmm(forwardmm)
     );
 
   initial begin
-    xm_rd = 4'b0001; xm_rt = 4'b0001; mw_rd = 4'b0001; dx_rs = 4'b0001; dx_rt = 4'b0001;
-    clk = 0;
-    #5;
-    rst = 1;
-    #20;
-    xm_regwrite = 1; mw_regwrite = 0; xm_memread = 0; #20;
-    rst = 0;
-    xm_regwrite = 0; mw_regwrite = 1; xm_memread = 0; #20;
-    $display("instruction got is %b and pc %b and %b", forwarda, forwardb, forwardmm);
-    rst = 0;
-    xm_regwrite = 0; mw_regwrite = 0; xm_memread = 1; #20;
-    $display("instruction got is %b and pc %b and %b", forwarda, forwardb, forwardmm);
-    rst = 0; 
-
-    xm_rd = 4'b0001; xm_rt = 4'b0001; mw_rd = 4'b0001; dx_rs = 4'b0001; dx_rt = 4'b0001;
-    xm_regwrite = 1; mw_regwrite = 0; xm_memread = 0; #20;
-    $display("instruction got is %b and pc %b and %b", forwarda, forwardb, forwardmm);
-    xm_regwrite = 0; mw_regwrite = 1; xm_memread = 0; #20;
-    $display("instruction got is %b and pc %b and %b", forwarda, forwardb, forwardmm);
-    xm_regwrite = 0; mw_regwrite = 0; xm_memread = 1; #20;
-    $display("instruction got is %b and pc %b and %b", forwarda, forwardb, forwardmm);
+    // forwarda = 01, forwardb = 10, forwardmm = 0
+    rs_EX = 4'h1; rt_EX = 4'h2; rd_MEM = 4'h1; rd_WB = 4'h2; 
+    regwrite_MEM = 1'b1; regwrite_WB = 1'b1;
+    rt_MEM = 4'h1; memwrite_MEM = 1'b1;
+    #20
+    $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
+    
+    // forward 
+    rd_MEM = 4'h2; rd_WB = 4'h1;
+    // forwarda = 10, forwardb = 01, forwardmm = 1
+    #20
+    $display("forwarda: %b forwardb: %b forwardmm: %b", forwarda, forwardb, forwardmm);
     $stop;
   end
   
-  always begin
-    #10;
-    clk = ~clk;
-  end
-
+  // always begin
+  //   #10;
+  //   clk = ~clk;
+  // end
 endmodule

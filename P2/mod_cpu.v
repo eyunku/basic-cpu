@@ -74,6 +74,7 @@ module mod_CPU (
 
     wire freeze_ID;
     wire nop_ID;
+    wire taken_ID;
     // pc reg wires
     wire rst = ~rst_n;
     wire [15:0] pc_in_ID, pc_out_IF;
@@ -97,7 +98,7 @@ module mod_CPU (
     IF_ID_pipe if_id_pipe(
         .clk(clk),
         .rst(rst),
-        .flush(1'b0), // TODO: for branch not taken
+        .flush(taken_ID), // TODO: for branch not taken
         .freeze(freeze_ID), // for stalls
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
@@ -141,7 +142,8 @@ module mod_CPU (
         .SrcData1(SrcData1_ID),
         .SrcData2(SrcData2_ID),
         .new_pc(pc_in_ID),
-        .imm_16bit(imm_16bit_ID));
+        .imm_16bit(imm_16bit_ID),
+        .taken(taken_ID));
 
     // Hazard Unit
     wire fd_memwrite;
@@ -155,7 +157,7 @@ module mod_CPU (
         .fd_memwrite(fd_memwrite), 
         .fd_regwrite(regwrite_ID), 
         .fd_alusrc(alusrc_ID), 
-        .fd_branchtaken(branchtaken_ID), 
+        .fd_branchtaken(taken_ID), 
         .dx_memread(dx_memread), 
         .dx_regwrite(regwrite_EX), 
         .xm_regwrite(regwrite_MEM), 

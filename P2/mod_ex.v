@@ -1,7 +1,7 @@
 // execution stage
 module mod_EX (
         input clk, rst,
-        input alusrc, memenable, pcread,
+        input alusrc, memenable, pcread, flag_en,
         input [1:0] branch, forward_aluin1, forward_aluin2,
         input [3:0] aluop,
         input [15:0] forward_DstData_MEM, forward_DstData_WB,
@@ -37,6 +37,7 @@ module mod_EX (
         .clk(clk),
         .rst(rst),
         .write(3'b111),
+        .flag_en(flag_en),
         .in(flag_in),
         .flag_out(flag_out)
     );

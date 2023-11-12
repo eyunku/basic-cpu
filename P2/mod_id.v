@@ -66,7 +66,7 @@ module mod_ID (
         .WriteReg(regwrite_wb), 
         .DstData(DstData), 
         .SrcData1(out1), 
-        .SrcData2(out2)
+        .SrcData2(SrcData2)
     );
 
     assign SrcData1 = pcread ? pc : out1;

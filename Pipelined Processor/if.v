@@ -1,6 +1,6 @@
 // Fetches next instruction from PC
 module mod_F (
-        input clk, rst, freeze,
+        input clk, rst, freeze, taken,
         input [1:0] branch,
         input [15:0] pc_in,
         output [15:0] pc_curr, // for t_cpu to display
@@ -28,5 +28,5 @@ module mod_F (
     // adder
     carry_lookahead next(.a(pc_curr), .b(16'h2), .sum(pc_curr2), .overflow(), .mode(1'b0));
     // mux
-    assign pc_next = (branch[0] | branch[1]) ? pc_in : pc_curr2;
+    assign pc_next = ((branch[0] | branch[1]) & taken) ? pc_in : pc_curr2;
 endmodule

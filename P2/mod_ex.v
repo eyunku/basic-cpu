@@ -42,7 +42,7 @@ module mod_EX (
     );
 
     wire keep_flag;
-    assign keep_flag = branch[0] | branch[1] | pcread;
+    assign keep_flag = branch[0] | branch[1] | pcread | memenable;
 
     // Update flags (flag = NVZ)
     assign flag_in[2] = keep_flag ? flag_out[2] :

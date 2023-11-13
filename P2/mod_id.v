@@ -8,7 +8,7 @@ module mod_ID (
         input [2:0] flag,
         input [3:0] DstReg_in,
         input [15:0] instruction, pc, DstData,
-        input regwrite_wb,
+        input regwrite_wb, flag_en,
         output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt, taken,
         output [1:0] branch,
         output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
@@ -31,7 +31,8 @@ module mod_ID (
     // CONTROL UNIT
     assign opcode = instruction[15:12];
     control control_unit (
-        .opcode(opcode), 
+        .opcode(opcode),
+        .flag_en(flag_en), 
         .regwrite(regwrite), 
         .alusrc(alusrc), 
         .memenable(memenable), 
@@ -49,8 +50,9 @@ module mod_ID (
     assign SrcReg1 = pcread ? 4'h0 : 
                      rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
     // SW case, use SrcReg2 for reading register "rt"
-    assign SrcReg2 = (pcread | alusrc) ? 4'h0 : 
-                     memenable & memwrite ? DstReg_out : instruction[3:0];
+    assign SrcReg2 = (pcread | alusrc) ? ((memenable & memwrite) ? DstReg_out : 4'h0) : instruction[3:0];
+
+    // assign SrcReg2 = (pcread | alusrc) ? 4'h0 : (memenable & memwrite) ? DstReg_out : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};

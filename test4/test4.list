@@ -1,3 +1,4 @@
+# test predict branch not taken and lw into sw
     LLB R1, 0x04 #0
     LHB R1, 0x00 #2
     LLB R2, 0xFF #4

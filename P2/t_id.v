@@ -6,7 +6,7 @@
 `include "pc_control.v"
 `include "pc_register.v"
 
-`include "mod_ID.v"
+`include "id.v"
 
 module t_mod_ID();
     // input

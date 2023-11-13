@@ -10,8 +10,10 @@
 module IF_ID_pipe(
         input clk, rst, freeze, flush,
         input [15:0]  inst_i, pc_i,
+        output flag_en_ID,
         output [15:0] inst_o, pc_o);
 
+    pipe_1b_reg nop_sig(.src(~flush), .dst(flag_en_ID), .clk(clk), .rst(rst), .freeze(0), .flush(0));
     pipe_16b_reg if_id_pc(.src(pc_i), .dst(pc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg if_id_inst(.src(inst_i), .dst(inst_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 endmodule
@@ -24,8 +26,8 @@ endmodule
 */
 module ID_EX_pipe(
         input clk, rst, flush,
-        input  alusrc_i, regwrite_i, memenable_i, memwrite_i, memtoreg_i, pcread_i, halt_i,
-        output alusrc_o, regwrite_o, memenable_o, memwrite_o, memtoreg_o, pcread_o, halt_o,
+        input  alusrc_i, regwrite_i, memenable_i, memwrite_i, memtoreg_i, pcread_i, halt_i, flag_en_ID,
+        output alusrc_o, regwrite_o, memenable_o, memwrite_o, memtoreg_o, pcread_o, halt_o, flag_en_EX,
         input  [1:0] branch_i,
         output [1:0] branch_o,
         input  [3:0] aluop_i, SrcReg1_i, SrcReg2_i, DstReg_i,
@@ -34,6 +36,7 @@ module ID_EX_pipe(
         output [15:0] SrcData1_o, SrcData2_o, imm_16bit_o, pc_o);
 
     parameter freeze = 1'b0;
+    pipe_1b_reg nop_sig(.src(flag_en_ID & ~flush), .dst(flag_en_EX), .clk(clk), .rst(rst), .freeze(0), .flush(0));
 
     pipe_1b_reg id_ex_alusrc(.src(alusrc_i), .dst(alusrc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_1b_reg id_ex_regwrite(.src(regwrite_i), .dst(regwrite_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));

@@ -20,7 +20,7 @@ endmodule
 * stores:
 * control signals -> EX, MEM, WB
 * data -> rs, rt, sext value, PC+4
-* reg -> rd, rs, rt     WHY ARE THERE TWO RT REGISTERS
+* reg -> rd, rs, rt
 */
 module ID_EX_pipe(
         input clk, rst, flush,

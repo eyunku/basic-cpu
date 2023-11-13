@@ -1,12 +1,13 @@
-module control(opcode, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, branch, alusext, pcread, rdsrc);
+module control(opcode, flag_en, regwrite, alusrc, memenable, memwrite, aluop, memtoreg, branch, alusext, pcread, rdsrc);
     input [3:0] opcode;
+    input flag_en;
     output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, alusext, rdsrc;
     output [1:0] branch;
     output [3:0] aluop;
 
     // RegWrite, determines if D is written to reg
     // 1 = write to reg, 0 = do no write to reg
-    assign regwrite = ~opcode[3] | (opcode == 4'b1000) | (opcode[3:1] == 3'b101) | (opcode == 4'b1110);
+    assign regwrite = flag_en & (~opcode[3] | (opcode == 4'b1000) | (opcode[3:1] == 3'b101) | (opcode == 4'b1110));
 
     // ALUSrc, determines if reg or imm is sent as input to ALU
     // 1 = use imm as 2nd operand, 0 = use reg as 2nd operand

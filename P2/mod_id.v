@@ -8,7 +8,7 @@ module mod_ID (
         input [2:0] flag,
         input [3:0] DstReg_in,
         input [15:0] instruction, pc, DstData,
-        input regwrite_wb,
+        input regwrite_wb, flag_en,
         output regwrite, alusrc, memenable, memwrite, memtoreg, pcread, rdsrc, halt, taken,
         output [1:0] branch,
         output [3:0] aluop, SrcReg1, SrcReg2, DstReg_out,
@@ -31,7 +31,8 @@ module mod_ID (
     // CONTROL UNIT
     assign opcode = instruction[15:12];
     control control_unit (
-        .opcode(opcode), 
+        .opcode(opcode),
+        .flag_en(flag_en), 
         .regwrite(regwrite), 
         .alusrc(alusrc), 
         .memenable(memenable), 

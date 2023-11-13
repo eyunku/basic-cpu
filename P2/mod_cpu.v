@@ -141,9 +141,7 @@ module mod_CPU (
     wire [15:0] aluout_WB, mem_WB, pc_WB;
 
 
-
-
-    // ==== FETCH module ====
+    // ==== FETCH module START ====
 
     mod_F mod_f(
         .clk(clk),
@@ -154,8 +152,10 @@ module mod_CPU (
         .pc_curr(pc),  // current PC
         .pc_curr2(pc_out_IF), // current PC + 2
         .instruction(instruction_IF));
+    
+    // ==== FETCH module END ====
 
-    // ==== IF/ID Pipeline Register ====
+    // ==== IF/ID Pipeline Register START ====
 
     IF_ID_pipe if_id_pipe(
         .clk(clk),
@@ -166,15 +166,15 @@ module mod_CPU (
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
 
+    // ==== IF/ID Pipeline Register END ====
 
-
-
-    // ==== DECODE module ====
+    // ==== DECODE module START ====
 
     // module for decode stage
     mod_ID mod_id(
         .clk(clk),
         .rst(rst),
+        .flag_en(flag_en_ID),
         .flag(flag_out),
         .DstReg_in(DstReg_WB), // hanging
         .instruction(instruction_ID),
@@ -224,7 +224,9 @@ module mod_CPU (
     assign freeze_ID = stall_sig;
     assign nop_ID = stall_sig;
 
-    // ==== ID/EX Pipeline Register ====
+    // ==== DECODE module END ====
+
+    // ==== ID/EX Pipeline Register START ====
 
     ID_EX_pipe id_ex_pipe(
         .clk(clk),
@@ -250,9 +252,9 @@ module mod_CPU (
         .pc_i(pc_in_ID), .pc_o(pc_EX)
     );
 
+    // ==== ID/EX Pipeline Register END ====
 
-
-    // ==== EXECUTION module ====
+    // ==== EXECUTION module START ====
 
     mod_EX mod_ex(
         .clk(clk),
@@ -288,7 +290,9 @@ module mod_CPU (
         .forwardb(forward_aluin2)
     );
 
-    // ==== EX/MEM Pipeline Register ====
+    // ==== EXECUTION module END ====
+
+    // ==== EX/MEM Pipeline Register START ====
 
     EX_MEM_pipe ex_mem_pipe(
         .clk(clk),
@@ -305,11 +309,9 @@ module mod_CPU (
         .aluout_i(aluout_EX), .aluout_o(aluout_MEM),
         .pc_i(pc_EX), .pc_o(pc_MEM));
 
+    // ==== EX/MEM Pipeline Register END ====
 
-
-
-
-    // ==== MEMORY module ====
+    // ==== MEMORY module START ====
 
     mod_MEM mod_mem(
         .clk(clk),
@@ -321,8 +323,10 @@ module mod_CPU (
         .memdata_forward(DstData_WB),
         .addr(aluout_MEM),
         .mem_out(mem));
+    
+    // ==== MEMORY module END ====
 
-    // ==== MEM/WB Pipeline Register ====
+    // ==== MEM/WB Pipeline Register START ====
 
     MEM_WB_pipe mem_wb_pipe(
         .clk(clk),
@@ -335,11 +339,9 @@ module mod_CPU (
         .mem_i(mem), .mem_o(mem_WB),
         .pc_i(pc_MEM), .pc_o(pc_WB));
 
+    // ==== MEM/WB Pipeline Register END ====
 
-
-
-
-    // ==== WB module ====
+    // ==== WB module START ====
 
     mod_WB mod_wb(
         .memtoreg(memtoreg_WB),
@@ -349,4 +351,6 @@ module mod_CPU (
 
     // set hlt bit
     assign hlt = halt_WB;
+
+    // ==== WB module END ====
 endmodule

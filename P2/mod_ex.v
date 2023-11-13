@@ -23,8 +23,6 @@ module mod_EX (
     assign aluin2 = alusrc ? (memenable ? (imm_16bit << 1) : imm_16bit) : aluin2_SrcData;
 
     wire err;
-    wire [2:0] flag_curr;
-    wire [2:0] flag_update;
 
     alu alu(
         .aluin1(aluin1),
@@ -33,6 +31,8 @@ module mod_EX (
         .aluout(aluout),
         .err(err)
     );
+
+    wire [2:0] flag_curr;
 
     flag_reg FLAG (
         .clk(clk),
@@ -43,6 +43,7 @@ module mod_EX (
     );
 
     wire keep_flag;
+    wire [2:0] flag_update;
     assign keep_flag = branch[0] | branch[1] | pcread | memenable;
 
     // Update flags (flag = NVZ)

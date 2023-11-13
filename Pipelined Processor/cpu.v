@@ -147,11 +147,13 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .freeze(freeze_ID),
+        .taken(taken_ID),
         .branch(branch_ID),
         .pc_in(pc_in_ID),
         .pc_curr(pc),  // current PC
         .pc_curr2(pc_out_IF), // current PC + 2
-        .instruction(instruction_IF));
+        .instruction(instruction_IF)
+    );
     
     // ==== FETCH module END ====
 

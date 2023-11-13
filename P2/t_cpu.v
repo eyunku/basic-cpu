@@ -1,4 +1,4 @@
-`include "mod_cpu.v"
+`include "cpu.v"
 
 module cpu_ptb();
   

@@ -26,7 +26,7 @@ module mod_ID (
     wire [2:0] C, F;
 
     // register output wires
-    wire [15:0] out1, out2;
+    wire [15:0] out1;
 
     // CONTROL UNIT
     assign opcode = instruction[15:12];

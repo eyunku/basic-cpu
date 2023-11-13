@@ -1,0 +1,17 @@
+    LLB R1, 0x04 #0
+    LHB R1, 0x00 #2
+    LLB R2, 0xFF #4
+    LHB R2, 0xFF #6
+    LLB R3, 0x00 #8
+    LHB R3, 0x00 #a
+b0: ADD R1, R1, R2 #c
+    B 001, b1 #e
+    ADD R3, R1, R3 #10
+    B 111, b0 #12
+    HLT #14
+b1: LLB R4, 0x55 #16
+    LHB R4, 0xA4 #18
+    SW R4, R3, 0 #1a
+    LW R6, R3, 0 #1c
+    SW R6, R3, 0 #1e
+    HLT #20

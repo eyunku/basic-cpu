@@ -11,12 +11,12 @@
 `include "hazard_detection.v"
 
 
-`include "mod_if.v"
-`include "mod_id.v"
-`include "mod_ex.v"
-`include "mod_mem.v"
-`include "mod_wb.v"
-`include "mod_pipe.v"
+`include "if.v"
+`include "id.v"
+`include "ex.v"
+`include "mem.v"
+`include "wb.v"
+`include "pipe.v"
 
 // ==== FETCH stage ====
 // Split up PC control

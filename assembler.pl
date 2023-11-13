@@ -314,7 +314,7 @@ close(IN);
 
 # print "BEGIN\n";
 
-#print "@"."0\n";
+print "@"."0\n";
 
 
 

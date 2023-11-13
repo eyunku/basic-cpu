@@ -1,0 +1,9 @@
+# test RAW hazard in branching
+    LLB R1, 0x0D #0
+    LHB R1, 0x00 #2
+    LLB R2, 0x01 #4
+    LHB R2, 0x00 #6
+    ADD R1, R1, R2 #8
+    BR 111, R1 #a
+    ADD R1, R1, R2 #c
+    HLT #e

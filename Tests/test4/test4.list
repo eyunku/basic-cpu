@@ -1,9 +1,10 @@
+# test predict branch not taken and lw into sw
     LLB R1, 0x04 #0
     LHB R1, 0x00 #2
     LLB R2, 0xFF #4
     LHB R2, 0xFF #6
     LLB R3, 0x00 #8
-    LHB R3, 0x00 #a
+    LHB R3, 0x0F #a
 b0: ADD R1, R1, R2 #c
     B 001, b1 #e
     ADD R3, R1, R3 #10

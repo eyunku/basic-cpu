@@ -178,7 +178,7 @@ module mod_CPU (
         .flag(flag_out),
         .DstReg_in(DstReg_WB), // hanging
         .instruction(instruction_ID),
-        .pc(pc_out_IF),
+        .pc(pc_out_ID),
         .DstData(DstData_WB),
         .regwrite_wb(regwrite_WB),
         .regwrite(regwrite_ID),

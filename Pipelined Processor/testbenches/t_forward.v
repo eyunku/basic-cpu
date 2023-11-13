@@ -1,4 +1,4 @@
-`include "forwarding_logic.v"
+`include "../forwarding_logic.v"
 
 module t_forward ();
   reg clk, rst, regwrite_MEM, regwrite_WB, memwrite_MEM;

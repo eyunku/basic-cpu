@@ -31,8 +31,8 @@
 //   end
 // endmodule
 
-`include "register.v"
-`include "dff.v"
+`include "../register.v"
+`include "../dff.v"
 
 module test_bench_RF ();
 reg clk, rst, WriteReg;

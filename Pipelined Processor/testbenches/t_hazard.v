@@ -1,4 +1,4 @@
-`include "hazard_detection.v"
+`include "../hazard_detection.v"
 
 /*
 * Some issues that can be forseen

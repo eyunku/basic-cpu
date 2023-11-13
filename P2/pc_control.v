@@ -52,8 +52,8 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out, taken);
   wire ovfl_add;
   reg [15:0] out;
 
-  carry_lookahead add_two(.sum(sub2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(1'b1));
-  carry_lookahead add_opt(.sum(b_out), .overflow(ovfl_add), .a(PC_in), .b(signext_imm), .mode(1'b0));
+  carry_lookahead sub_two(.sum(sub2), .overflow(ovfl2), .a(PC_in), .b(16'h0002), .mode(1'b1));
+  carry_lookahead add_imm(.sum(b_out), .overflow(ovfl_add), .a(sub2), .b(signext_imm), .mode(1'b0));
 
   // case statement for branch signal
   // 00: no branch, 01: b, 10: br, 11: hlt

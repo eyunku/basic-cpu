@@ -13,6 +13,4 @@ module flag_reg (clk, rst, flag_en, in, flag_out);
   dff n (.q(Q[2]), .d(in[2]), .wen(flag_en), .clk(clk), .rst(rst));
   dff v (.q(Q[1]), .d(in[1]), .wen(flag_en), .clk(clk), .rst(rst));
   dff z (.q(Q[0]), .d(in[0]), .wen(flag_en), .clk(clk), .rst(rst));
-
-  assign flag_out = flag_en ? in : Q;
 endmodule

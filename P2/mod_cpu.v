@@ -271,7 +271,7 @@ module mod_CPU (
         .SrcData2(SrcData2_EX),
         .imm_16bit(imm_16bit_EX),
         .aluout(aluout_EX),
-        .flag_out(flag_out)
+        .flag_new(flag_out)
     );
 
     forwarding_unit forward(

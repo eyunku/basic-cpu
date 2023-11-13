@@ -15,4 +15,3 @@ b1: LLB R4, 0x55
     LW R6, R3, 0
     SW R6, R3, 0
     HLT
-    

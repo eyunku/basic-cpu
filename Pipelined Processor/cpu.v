@@ -18,60 +18,12 @@
 `include "wb.v"
 `include "pipe.v"
 
-// ==== FETCH stage ====
-// Split up PC control
-// PC + 2 is done in fetch
-// Branching is done in decode
-// Resolution is done in fetch w/ branching signal from pc_control
-
-// Passes out instruction and PC + 2
-
-// fetch takes in:
-// branch signal to determine next PC
-// freeze signal for stalling PC
-
-// Pipeline at this stage takes in:
-// flush signal for branch not taken
-// freeze signal for stalls
-// instruction and PC + 2
-
-// ==== DECODE stage ====
-// Decode should emit rs and rt registers for hazard
-// If neither rs or rt are used, emit 0000
-// ALUSrc to differentiate between usage of rt or imm
-// Branch = 2 for branching edge case
-
-// Dealing with BR RAW dependency
-// Possible Solutions: 
-// Delay until after EX + ID Forwarding (EX-ID, MEM-ID)
-// Delay until writeback + register bypassing
-
-// PCS should be resolved in decode and piped through the rs register
-// mux on both SrcData1 wire and SrcData2 wire using pcread signal
-// pass in SrcData1 and (pc + 2) for mux 1
-// pass in SrcData2 and 16'h0 for mux 2
-
-// Decode should pass out:
-// Control signals for other stages
-// Immediate value, SrcData1 and SrcData2
-// Register ID's for rd, rs, rt
-// the next PC for branching
-
-// ==== Execute stage ====
-// 
-
-// ==== WRITEBACK stage ====
-// PC and halt are set at writeback
-
-// TODO add nop
-
 module mod_CPU (
         input clk, rst_n,
         output hlt,
         output [15:0] pc);
 
     // ==== FETCH stage wires ====
-
     wire freeze_ID;
     wire nop_ID;
     wire taken_ID;
@@ -86,7 +38,6 @@ module mod_CPU (
     wire [15:0] instruction_ID, pc_out_ID;
 
     // ==== DECODE stage wires ====
-
     // wires for CONTROL UNIT
     wire regwrite_ID, alusrc_ID, memenable_ID, memwrite_ID, memtoreg_ID, pcread_ID, alusext_ID, rdsrc_ID, halt_ID;
     wire [1:0] branch_ID;
@@ -114,10 +65,9 @@ module mod_CPU (
     wire [3:0] SrcReg1_EX, SrcReg2_EX;
 
     wire [3:0] DstReg_EX;
-    wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX, pc_EX;
+    wire [15:0] SrcData1_EX, SrcData2_EX, imm_16bit_EX;
 
     // ==== EXECUTION stage wires ====
-
     // wires for flag reg
     wire [2:0] flag_out;
     // wires for alu
@@ -130,7 +80,7 @@ module mod_CPU (
     // pipeline registers
     wire regwrite_MEM, memenable_MEM, memwrite_MEM, memtoreg_MEM, halt_MEM;
     wire [3:0] SrcReg1_MEM, SrcReg2_MEM, DstReg_MEM;
-    wire [15:0] SrcData2_MEM, aluout_MEM, pc_MEM;
+    wire [15:0] SrcData2_MEM, aluout_MEM;
 
     // ==== MEMORY stage wires ====
     wire [15:0] mem;
@@ -138,7 +88,7 @@ module mod_CPU (
     // pipeline wires
     wire regwrite_WB, memtoreg_WB, halt_WB;
     wire [3:0] DstReg_WB;
-    wire [15:0] aluout_WB, mem_WB, pc_WB;
+    wire [15:0] aluout_WB, mem_WB;
 
 
     // ==== FETCH module START ====
@@ -160,7 +110,7 @@ module mod_CPU (
     IF_ID_pipe if_id_pipe(
         .clk(clk),
         .rst(rst),
-        .flush(taken_ID), // TODO: for branch not taken
+        .flush(taken_ID),
         .flag_en_ID(flag_en_ID),
         .freeze(freeze_ID), // for stalls
         .inst_i(instruction_IF), .inst_o(instruction_ID),
@@ -178,7 +128,7 @@ module mod_CPU (
         .flag(flag_out),
         .DstReg_in(DstReg_WB), // hanging
         .instruction(instruction_ID),
-        .pc(pc_out_IF),
+        .pc(pc_out_ID),
         .DstData(DstData_WB),
         .regwrite_wb(regwrite_WB),
         .regwrite(regwrite_ID),
@@ -232,8 +182,7 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flush(nop_ID), // for stalls
-        .flag_en_ID(flag_en_ID),
-        .flag_en_EX(flag_en_EX),
+        .flag_en_ID(flag_en_ID), .flag_en_EX(flag_en_EX),
         .alusrc_i(alusrc_ID), .alusrc_o(alusrc_EX),
         .regwrite_i(regwrite_ID), .regwrite_o(regwrite_EX),
         .memenable_i(memenable_ID), .memenable_o(memenable_EX),
@@ -248,8 +197,7 @@ module mod_CPU (
         .DstReg_i(DstReg_out_ID), .DstReg_o(DstReg_EX),
         .SrcData1_i(SrcData1_ID), .SrcData1_o(SrcData1_EX),
         .SrcData2_i(SrcData2_ID), .SrcData2_o(SrcData2_EX),
-        .imm_16bit_i(imm_16bit_ID), .imm_16bit_o(imm_16bit_EX),
-        .pc_i(pc_in_ID), .pc_o(pc_EX)
+        .imm_16bit_i(imm_16bit_ID), .imm_16bit_o(imm_16bit_EX)
     );
 
     // ==== ID/EX Pipeline Register END ====
@@ -306,8 +254,7 @@ module mod_CPU (
         .SrcReg2_i(SrcReg2_EX), .SrcReg2_o(SrcReg2_MEM),
         .DstReg_i(DstReg_EX), .DstReg_o(DstReg_MEM),
         .SrcData2_i(SrcData2_EX), .SrcData2_o(SrcData2_MEM),
-        .aluout_i(aluout_EX), .aluout_o(aluout_MEM),
-        .pc_i(pc_EX), .pc_o(pc_MEM));
+        .aluout_i(aluout_EX), .aluout_o(aluout_MEM));
 
     // ==== EX/MEM Pipeline Register END ====
 
@@ -336,8 +283,7 @@ module mod_CPU (
         .halt_i(halt_MEM), .halt_o(halt_WB),
         .DstReg_i(DstReg_MEM), .DstReg_o(DstReg_WB),
         .aluout_i(aluout_MEM), .aluout_o(aluout_WB),
-        .mem_i(mem), .mem_o(mem_WB),
-        .pc_i(pc_MEM), .pc_o(pc_WB));
+        .mem_i(mem), .mem_o(mem_WB));
 
     // ==== MEM/WB Pipeline Register END ====
 

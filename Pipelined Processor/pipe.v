@@ -32,8 +32,8 @@ module ID_EX_pipe(
         output [1:0] branch_o,
         input  [3:0] aluop_i, SrcReg1_i, SrcReg2_i, DstReg_i,
         output [3:0] aluop_o, SrcReg1_o, SrcReg2_o, DstReg_o,
-        input  [15:0] SrcData1_i, SrcData2_i, imm_16bit_i, pc_i,
-        output [15:0] SrcData1_o, SrcData2_o, imm_16bit_o, pc_o);
+        input  [15:0] SrcData1_i, SrcData2_i, imm_16bit_i,
+        output [15:0] SrcData1_o, SrcData2_o, imm_16bit_o);
 
     parameter freeze = 1'b0;
     pipe_1b_reg nop_sig(.src(flag_en_ID), .dst(flag_en_EX), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
@@ -57,7 +57,6 @@ module ID_EX_pipe(
     pipe_16b_reg id_ex_SrcData1(.src(SrcData1_i), .dst(SrcData1_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg id_ex_SrcData2(.src(SrcData2_i), .dst(SrcData2_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg id_ex_imm_16bit(.src(imm_16bit_i), .dst(imm_16bit_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
-    pipe_16b_reg id_ex_pc(.src(pc_i), .dst(pc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 endmodule
 
 /*
@@ -72,8 +71,8 @@ module EX_MEM_pipe(
         output regwrite_o, memenable_o, memwrite_o, memtoreg_o, halt_o,
         input  [3:0] SrcReg1_i, SrcReg2_i, DstReg_i,
         output [3:0] SrcReg1_o, SrcReg2_o, DstReg_o,
-        input  [15:0] SrcData2_i, aluout_i, pc_i,
-        output [15:0] SrcData2_o, aluout_o, pc_o);
+        input  [15:0] SrcData2_i, aluout_i,
+        output [15:0] SrcData2_o, aluout_o);
 
     parameter flush = 1'b0;
     parameter freeze = 1'b0;
@@ -90,7 +89,6 @@ module EX_MEM_pipe(
 
     pipe_16b_reg ex_mem_SrcData2(.src(SrcData2_i), .dst(SrcData2_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg ex_mem_aluout(.src(aluout_i), .dst(aluout_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
-    pipe_16b_reg ex_mem_pc(.src(pc_i), .dst(pc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 endmodule
 
 module MEM_WB_pipe(
@@ -99,8 +97,8 @@ module MEM_WB_pipe(
         output regwrite_o, memtoreg_o, halt_o,
         input  [3:0] DstReg_i,
         output [3:0] DstReg_o,
-        input  [15:0] aluout_i, mem_i, pc_i,
-        output [15:0] aluout_o, mem_o, pc_o);
+        input  [15:0] aluout_i, mem_i,
+        output [15:0] aluout_o, mem_o);
 
     parameter flush = 1'b0;
     parameter freeze = 1'b0;
@@ -113,5 +111,4 @@ module MEM_WB_pipe(
 
     pipe_16b_reg mem_wb_aluout(.src(aluout_i), .dst(aluout_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg mem_wb_mem(.src(mem_i), .dst(mem_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
-    pipe_16b_reg mem_wb_pc(.src(pc_i), .dst(pc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 endmodule

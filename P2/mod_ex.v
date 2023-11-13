@@ -36,7 +36,6 @@ module mod_EX (
     flag_reg FLAG (
         .clk(clk),
         .rst(rst),
-        .write(3'b111),
         .flag_en(flag_en),
         .in(flag_in),
         .flag_out(flag_out)

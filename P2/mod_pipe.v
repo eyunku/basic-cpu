@@ -13,7 +13,7 @@ module IF_ID_pipe(
         output flag_en_ID,
         output [15:0] inst_o, pc_o);
 
-    pipe_1b_reg flag_sig(.src(1'b1), .dst(flag_en_ID), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
+    pipe_1b_reg nop_sig(.src(~rst), .dst(flag_en_ID), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg if_id_pc(.src(pc_i), .dst(pc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_16b_reg if_id_inst(.src(inst_i), .dst(inst_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 endmodule
@@ -36,7 +36,7 @@ module ID_EX_pipe(
         output [15:0] SrcData1_o, SrcData2_o, imm_16bit_o, pc_o);
 
     parameter freeze = 1'b0;
-    pipe_1b_reg flag_sig(.src(flag_en_ID), .dst(flag_en_EX), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
+    pipe_1b_reg nop_sig(.src(flag_en_ID), .dst(flag_en_EX), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
 
     pipe_1b_reg id_ex_alusrc(.src(alusrc_i), .dst(alusrc_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));
     pipe_1b_reg id_ex_regwrite(.src(regwrite_i), .dst(regwrite_o), .clk(clk), .rst(rst), .freeze(freeze), .flush(flush));

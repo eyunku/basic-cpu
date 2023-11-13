@@ -49,8 +49,9 @@ module mod_ID (
     assign SrcReg1 = pcread ? 4'h0 : 
                      rdsrc ? DstReg_out : instruction[7:4]; // LLB + LHB case
     // SW case, use SrcReg2 for reading register "rt"
-    assign SrcReg2 = (pcread | alusrc) ? 4'h0 : 
-                     memenable & memwrite ? DstReg_out : instruction[3:0];
+    assign SrcReg2 = (pcread | alusrc) ? ((memenable & memwrite) ? DstReg_out : 4'h0) : instruction[3:0];
+
+    // assign SrcReg2 = (pcread | alusrc) ? 4'h0 : (memenable & memwrite) ? DstReg_out : instruction[3:0];
 
     // Sext unit here
     assign imm_4bit = instruction[3] ? {12'hFFF, instruction[3:0]} : {12'b0, instruction[3:0]};

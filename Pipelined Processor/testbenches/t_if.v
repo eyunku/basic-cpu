@@ -1,4 +1,4 @@
-`include "if.v"
+`include "../if.v"
 
 module t_mod_IF();
     // input

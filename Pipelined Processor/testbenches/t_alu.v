@@ -1,3 +1,5 @@
+`include "../alu.v"
+
 module t_alu();
     reg[3:0] aluop;
     reg[15:0] aluin1, aluin2;

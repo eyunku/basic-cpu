@@ -82,6 +82,7 @@ module mod_CPU (
     wire [15:0] instruction_IF;
 
     // pipeline wires
+    wire flag_en_ID;
     wire [15:0] instruction_ID, pc_out_ID;
 
     // ==== DECODE stage wires ====
@@ -109,6 +110,7 @@ module mod_CPU (
     wire [3:0] aluop_EX;
 
     // Wires for forwarding + data hazard unit
+    wire flag_en_EX;
     wire [3:0] SrcReg1_EX, SrcReg2_EX;
 
     wire [3:0] DstReg_EX;
@@ -159,6 +161,7 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flush(taken_ID), // TODO: for branch not taken
+        .flag_en_ID(flag_en_ID),
         .freeze(freeze_ID), // for stalls
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
@@ -227,6 +230,8 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flush(nop_ID), // for stalls
+        .flag_en_ID(flag_en_ID),
+        .flag_en_EX(flag_en_EX),
         .alusrc_i(alusrc_ID), .alusrc_o(alusrc_EX),
         .regwrite_i(regwrite_ID), .regwrite_o(regwrite_EX),
         .memenable_i(memenable_ID), .memenable_o(memenable_EX),
@@ -256,6 +261,7 @@ module mod_CPU (
         .memenable(memenable_EX),
         .pcread(pcread_EX),
         .branch(branch_EX),
+        .flag_en(flag_en_EX),
         .forward_aluin1(forward_aluin1),
         .forward_aluin2(forward_aluin2),
         .aluop(aluop_EX),

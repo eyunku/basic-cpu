@@ -28,5 +28,6 @@ module mod_F (
     // adder
     carry_lookahead next(.a(pc_curr), .b(16'h2), .sum(pc_curr2), .overflow(), .mode(1'b0));
     // mux
-    assign pc_next = ((branch[0] | branch[1]) & taken) ? pc_in : pc_curr2;
+    assign pc_next = (instruction[15:12] == 4'hF) ? pc_curr : 
+                     ((branch[0] | branch[1]) & taken) ? pc_in : pc_curr2;
 endmodule

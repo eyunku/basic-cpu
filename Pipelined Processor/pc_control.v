@@ -56,6 +56,7 @@ module pc_control (bsig, C, I, F, regsrc, PC_in, PC_out, taken);
   // case statement for branch signal
   // 00: no branch, 01: b, 10: br, 11: hlt
   // must evaluate whether branching is true or not, if it isnt we just run the sum2
+  reg assert_halt;
   always @(*) begin
     case (bsig)
       2'b00: out = PC_in;

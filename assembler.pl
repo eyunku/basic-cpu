@@ -6,7 +6,7 @@
 
 #
 
-# assembler.pl <infile> [ > <outfile> ]
+# assembler.pl <infile> [ >| <outfile> ]
 
 
 

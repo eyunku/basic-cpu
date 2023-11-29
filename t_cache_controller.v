@@ -38,12 +38,19 @@ module t_cache_controller();
     // Case 5: rst_n is asserted, check that state reverts to idle
 
     initial begin
-        clk = 1'b0; rst_n = 1'b0; #40
-        rst_n = 1'b1; miss_detected = 1'b1; miss_address = 16'hFFFE; memory_data_in = 16'h1111; memory_data_valid = 1'h1; #20
+        clk = 1'b0; rst_n = 1'b0; miss_detected = 1'b0; miss_address = 16'h0; memory_data_in = 16'h0; memory_data_valid = 1'h0; #40
+        rst_n = 1'b1; #20
+        miss_detected = 1'b1; miss_address = 16'hFFFE;
+        #20
+        memory_data_in = 16'h1111; memory_data_valid = 1'h1;
+        #60
         $display("fsm_busy: %b write_data_array: %b write_tag_array: %b memory_address: %h memory_data_out: %h", 
                     fsm_busy, write_data_array, write_tag_array, memory_address, memory_data_out);
-        miss_detected = 1'b1; miss_address = 16'hFFFE; memory_data_in = 16'h1111; memory_data_valid = 1'h1; #20
-        #80
+        #20
+        memory_data_in = 16'h1112; memory_data_valid = 1'h1;
+        $display("fsm_busy: %b write_data_array: %b write_tag_array: %b memory_address: %h memory_data_out: %h", 
+            fsm_busy, write_data_array, write_tag_array, memory_address, memory_data_out);
+        #60
         $display("fsm_busy: %b write_data_array: %b write_tag_array: %b memory_address: %h memory_data_out: %h", 
             fsm_busy, write_data_array, write_tag_array, memory_address, memory_data_out);
         $stop;

@@ -1,4 +1,6 @@
 `include "cache_controller.v"
+`include "dff.v" 
+`include "alu.v"
 
 module t_cache_controller();
     reg clk, rst_n;
@@ -25,17 +27,6 @@ module t_cache_controller();
         .memory_address(memory_address),
         .memory_data_out(memory_data_out)
     );
-
-    // Case 1: at idle state, no transition
-
-    // Case 2: at idle state, transition IW
-
-    // Case 3a: at wait state, no transition occurs
-    // Case 3b: at wait state, transition WW occurs
-
-    // Case 4: at wait state, transition WI occurs
-
-    // Case 5: rst_n is asserted, check that state reverts to idle
 
     initial begin
         // initialize controller

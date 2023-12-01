@@ -62,17 +62,17 @@ module cache_fill_FSM (
         .valid_out(valid_pipe_out), .addr_out(addr_pipe_out), .data_out(data_pipe_out)
     );
 
-    assign done = ((addr_pipe_out & 16'hE) == 16'hE) & state_curr & valid_pipe_out;
+    assign done = (addr_pipe_out[3:0] == 4'hE) & (addr_curr[3:0] == 4'hE) & state_curr & valid_pipe_out;
 
     wire [15:0] chunk_next;
     carry_lookahead next_chunk_address (.a(addr_curr), .b(16'h2), .sum(chunk_next), .overflow(), .mode(1'b0));
     assign addr_next = (miss_detected & ~state_curr) ? (miss_address & ~16'hF) : 
                        (valid_pipe_out & addr_pipe_out == addr_curr & state_curr) ? chunk_next : addr_curr;
 
-    assign memory_address = addr_next;
+    assign memory_address = addr_curr;
     assign memory_data_out = data_pipe_out;
-    assign fsm_busy = state_curr | miss_detected; // TODO extra logic to cache
-    assign write_data_array = valid_pipe_out & addr_pipe_out == addr_curr;
+    assign fsm_busy = (state_curr & ~done) | (miss_detected & ~state_curr);
+    assign write_data_array = valid_pipe_out & (addr_pipe_out == addr_curr);
     assign write_tag_array = done;
 endmodule
 

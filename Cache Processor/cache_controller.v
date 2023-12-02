@@ -31,56 +31,50 @@ module cache_fill_FSM (
     wire state_curr, done, transition;
     wire [15:0] addr_curr, addr_next;
 
+    // State transition, WAIT/IDLE
     assign transition = (miss_detected & ~state_curr) | done;
     dff STATE (.q(state_curr), .d(~state_curr), .wen(transition), .clk(clk), .rst(rst));
 
+    // Current Address for retrieving block
     dff ADDR[15:0] (.q(addr_curr[15:0]), .d(addr_next[15:0]), .wen(1'b1), .clk(clk), .rst(rst));
 
-    // Pipeline for propagating data, 4 cycles
-    wire valid_0, valid_1, valid_pipe_out;
-    wire [15:0] addr_0, data_0;
-    wire [15:0] addr_1, data_1;
-    wire [15:0] addr_pipe_out, data_pipe_out;
-
+    // Pipeline to verify incoming data is associated to requested memory address
+    wire [15:0] addr_0, addr_1, addr_pipe_out;
     cache_PIPE pipe_0 (
         .wen(state_curr), .rst(rst), .clk(clk), 
-        .valid_in(memory_data_valid), .addr_in(addr_curr), .data_in(memory_data_in),
-        .valid_out(valid_0), .addr_out(addr_0), .data_out(data_0)
+        .addr_in(addr_curr),
+        .addr_out(addr_0)
     );
-
     cache_PIPE pipe_1 (
         .wen(state_curr), .rst(rst), .clk(clk), 
-        .valid_in(valid_0), .addr_in(addr_0), .data_in(data_0),
-        .valid_out(valid_1), .addr_out(addr_1), .data_out(data_1)
+        .addr_in(addr_0),
+        .addr_out(addr_1)
     );
-
     cache_PIPE pipe_2 (
         .wen(state_curr), .rst(rst), .clk(clk), 
-        .valid_in(valid_1), .addr_in(addr_1), .data_in(data_1),
-        .valid_out(valid_pipe_out), .addr_out(addr_pipe_out), .data_out(data_pipe_out)
+        .addr_in(addr_1),
+        .addr_out(addr_pipe_out)
     );
 
-    assign done = (addr_pipe_out[3:0] == 4'hE) & (addr_curr[3:0] == 4'hE) & state_curr & valid_pipe_out;
+    // Checks that last chunk has been handled
+    assign done = (addr_pipe_out[3:0] == 4'hE) & (addr_curr[3:0] == 4'hE) & state_curr & memory_data_valid;
 
     wire [15:0] chunk_next;
     carry_lookahead next_chunk_address (.a(addr_curr), .b(16'h2), .sum(chunk_next), .overflow(), .mode(1'b0));
     assign addr_next = (miss_detected & ~state_curr) ? (miss_address & ~16'hF) : 
-                       (valid_pipe_out & addr_pipe_out == addr_curr & state_curr) ? chunk_next : addr_curr;
+                       (memory_data_valid & (addr_pipe_out == addr_curr) & state_curr) ? chunk_next : addr_curr;
 
-    assign memory_address = addr_curr;
-    assign memory_data_out = data_pipe_out;
+    assign memory_address = addr_next;
+    assign memory_data_out = memory_data_in;
     assign fsm_busy = (state_curr & ~done) | (miss_detected & ~state_curr);
-    assign write_data_array = valid_pipe_out & (addr_pipe_out == addr_curr);
+    assign write_data_array = memory_data_valid & (addr_pipe_out == addr_curr);
     assign write_tag_array = done;
 endmodule
 
 module cache_PIPE(
-        input wen, rst, clk, valid_in,
-        input [15:0] addr_in, data_in,
-        output valid_out,
-        output [15:0] addr_out, data_out
+        input wen, rst, clk,
+        input [15:0] addr_in,
+        output [15:0] addr_out
     );
     dff ADDR[15:0] (.q(addr_out[15:0]), .d(addr_in[15:0]), .wen(wen), .clk(clk), .rst(rst));
-    dff DATA[15:0] (.q(data_out[15:0]), .d(data_in[15:0]), .wen(wen), .clk(clk), .rst(rst));
-    dff VALID (.q(valid_out), .d(valid_in), .wen(wen), .clk(clk), .rst(rst));
 endmodule

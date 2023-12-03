@@ -1,3 +1,4 @@
+`include "array-helpers.v"
 //cache.v, organizing my thoughts for the cache
 
 // Cache is 2048B in size, 2-way set-associative, with cache blocks of 16B each
@@ -5,41 +6,6 @@
 // The meta-data array would have 128 total entries composed of 64 sets with 2 ways each
 //
 // LRU dirty bit
-
-// decoder for tag and set bits
-// an address comes in and is split into the tag and set bits
-// offset: 2 offset bits
-// set: 64 sets = 2^6 sets, so 6 set bits
-// tag: 16 - 6 - 2 = 8 tag bits
-module addr_tag_decode (
-  input [15:0] address,
-  output [7:0] tag_out,
-  output [5:0] set_out,
-  output [1:0] offset_out
-);
-  assign tag_out = address[15:8];
-  assign set_out = address[7:2];
-  assign offset_out = address[1:0];
-endmodule
-
-// for finding where in the dataarray we are
-module encode_set_6_128(
-  input set_str;
-  output set_onehot;
-);
-  wire b1;
-wire [8:0] b9;
-wire [12:0] bc;
-wire [14:0] be;
-
-assign b1 = 1'b1;
-assign b9 = set_str[3] ? {b1, 8'b00000000} : {8'b00000000, b1};
-assign bc = set_str[2] ? {b9, 4'b0000} : {4'b0000, b9};
-assign be = set_str[1] ? {bc, 2'b00} : {2'b00, bc};
-assign set_onehot = RegId[0] ? {be, 1'b0} : {1'b0, be};
-endmodule
-
-
 
 // I-cache
 // initialize a data-array and a metadata-array
@@ -66,8 +32,8 @@ module i_cache (
     .offset_out(offset_str)
   );
 
-  // the metadata array
-  MetaDataArray tag_arr(
+  // the metadata arrays
+  MetaDataArray MDway1(
     .clk(clk),
     .rst(rst),
     .DataIn(tag_str),
@@ -75,6 +41,16 @@ module i_cache (
     .BlockEnable(set_str),  // 128 bit encoded one-hot
     .DataOut(tag_compare) // data out is 8 bit how?? isnt this being compared to the tag bits?
   );
+  MetaDataArray MDway2(
+    .clk(clk),
+    .rst(rst),
+    .DataIn(tag_str),
+    .Write(wen),
+    .BlockEnable(set_str),  // 128 bit encoded one-hot
+    .DataOut(tag_compare) // data out is 8 bit how?? isnt this being compared to the tag bits?
+  );
+
+  
 
   // the actual data_arr
   DataArray data_arr(

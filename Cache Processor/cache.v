@@ -22,15 +22,14 @@ module i_cache (
   wire [7:0] tag_compare;
   wire [5:0] set_str;
   wire [1:0] offset_str;
-  wire [63:0] set_onehot;
+  
   
   
   addr_tag_decode decoder(
     .address(address),
     .tag_out(tag_str),
     .set_out(set_str),
-    .offset_out(offset_str),
-    .set_onehot(set_onehot)
+    .offset_out(offset_str)
   );
 
   // the metadata arrays
@@ -51,34 +50,10 @@ module i_cache (
     .DataOut(tag_compare) // data out is 8 bit how?? isnt this being compared to the tag bits?
   );
 
-  // for tracking valid block
-  ValidArray VAway1(
-    .clk(clk),
-    .rst(rst),
-    .next_state(),
-    .update(),
-    .BlockEnable(),
-    .curr_state()
-  );
-  ValidArray VAway2(
-    .clk(clk),
-    .rst(rst),
-    .next_state(),
-    .update(),
-    .BlockEnable(),
-    .curr_state()
-  );
-
   
 
   // the actual data_arr
-  DataArray Dway1(
-    .clk(clk),
-    .rst(rst),
-    .DataIn(),
-    .Write(), input [127:0] BlockEnable, input [7:0] WordEnable, output [15:0] DataOut
-  );
-  DataArray Dway2(
+  DataArray data_arr(
     .clk(clk),
     .rst(rst),
     .DataIn(),

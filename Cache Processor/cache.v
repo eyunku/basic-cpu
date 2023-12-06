@@ -7,74 +7,58 @@
 // data array would have 128 lines in total, each being 16 bytes wide:
 // The meta-data array would have 128 total entries composed of 64 sets with 2 ways each
 //
-// LRU dirty bit
+// then lru bit[7] and valid bit[6] and then tag[5:0]
 
 // I-cache
 // initialize a data-array and a metadata-array
-// 
+// miss_en bit means, we are populating cache
 module i_cache (
   input clk, rst,
-  input [15:0] address,
-  input [15:0] data_in,
-  input en, write,
-  output [15:0] data_out,
-  output cache_miss
+  input [15:0] address, // address to be decoded
+  input [15:0] data_in, // data coming in for cache loading
+  input load_data, //  on when writing to data_array
+  input load_tag, // on when writing to metadata_array
+  output [15:0] data_out, // returns data on a hit (only valid on hits)
+  output cache_miss // incure a miss
 );
   // decode/encode wires
-  wire [6:0] tag_str;
+  wire [5:0] tag_str;
   wire [7:0] offset_onehot;
   wire [63:0] set_onehot;
 
   // tags from 2ways
-  wire [7:0] tag1;
-  wire [7:0] tag2;
+  wire [7:0] tag_out;
 
-  wire lru; // least recently used line
+  // data array
   wire [15:0] data1;
   wire [15:0] data2;
   
   // hit/miss logic
-  wire hit1 = (tag_str == tag1[6:0]) & tag1[7];
-  wire hit2 = (tag_str == tag2[6:0]) & tag2[7];
-  assign cache_miss = ~hit1 & ~hit2; 
+  wire [2:0] lru_sig;
+  wire cache_hit;
+  assign cache_miss = ~cache_hit;
+
   // data out on a hit
-  assign data_out = cache_miss ? 1'bz : (hit2 ? data2 : data1);
+  assign data_out = cache_miss ? 1'bz : (lru_sig[1] ? data2 : data1);
 
-
-  addr_tag_decode decoder(
+  addr_tag_decode addressdecoder(
     .address(address),
     .tag_out(tag_str),
     .offset_onehot(offset_onehot),
     .set_onehot(set_onehot)
   );
 
+
   // the metadata arrays
-  MetaDataArray MDway1(
+  MetaDataArray MDarray(
     .clk(clk),
     .rst(rst),
     .DataIn({1'b1, tag_str}),
-    .Write(en & ~lru & cache_miss),
+    .Write(load_tag),
     .BlockEnable(set_onehot),  // 64 bit encoded one-hot
-    .DataOut(tag1)
-  );
-  MetaDataArray MDway2(
-    .clk(clk),
-    .rst(rst),
-    .DataIn({1'b1, tag_str}),
-    .Write(en & lru & cache_miss),
-    .BlockEnable(set_onehot),  // 64 bit encoded one-hot
-    .DataOut(tag2)
-  );
-
-
-  // controlling least recently used and eviction policy
-  LRUArray dirtybit(
-    .clk(clk),
-    .rst(rst),
-    .mru(hit2),
-    .wen(~cache_miss),
-	  .BlockEnable(set_onehot),
-	  .lru(lru)
+    .DataOut(tag_out),
+    .CacheHit(cache_hit),
+    .lru_sig(lru_sig)
   );
   
 
@@ -83,17 +67,18 @@ module i_cache (
     .clk(clk),
     .rst(rst),
     .DataIn(data_in),
-    .Write(en & ~lru & cache_miss),
-    .BlockEnable(set_onehot),
+    .Write(load_data),
+    .BlockEnable(set_onehot & {64{~lru_sig[0]}}),
     .WordEnable(offset_onehot),
     .DataOut(data1)
   );
+
   DataArray Dway2(
     .clk(clk),
     .rst(rst),
     .DataIn(data_in),
-    .Write(en & lru & cache_miss),
-    .BlockEnable(set_onehot),
+    .Write(load_data),
+    .BlockEnable(set_onehot & {64{~lru_sig[1]}}),
     .WordEnable(offset_onehot),
     .DataOut(data2)
   );

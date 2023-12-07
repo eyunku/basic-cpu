@@ -66,13 +66,53 @@ module t_cache ();
         load_tag = 1;
         #20;
 
-
         // SAME ADDR SHOULD HIT
         address = 16'b0000000000000000; // tag 3, set 1, offset 0
         load_tag = 0; load_data = 0;
         #20;
         // SAME BLOCK SHOULD HIT
         address = 16'b0000000000000110; // tag 3, set 1, offset 0
+        #20;
+        // DIFF ADDRESS SHOULD MISS
+        address = 16'b0000011000001000; // tag 3, set 1, offset 0
+        #20;
+
+        // TEST LOADING IN DIFF TAG
+        address = 16'b1000000000000000; // tag 1, set 1, offset 0
+        data_in = 16'h00DA;
+        load_data = 1;
+        #20;
+        address = 16'b1000000000000010; // tag 1, set 1, offset 0
+        data_in = 16'h00DB;
+        #20;
+        address = 16'b1000000000000100; // tag 1, set 1, offset 0
+        data_in = 16'h00DC;
+        #20;
+        address = 16'b1000000000000110; // tag 1, set 1, offset 0
+        data_in = 16'h00DD;
+        #20;
+        address = 16'b1000000000001000; // tag 1, set 1, offset 0
+        data_in = 16'h00CA;
+        #20;
+        address = 16'b1000000000001010; // tag 1, set 1, offset 0
+        data_in = 16'h00CB;
+        #20;
+        address = 16'b1000000000001100; // tag 1, set 1, offset 0
+        data_in = 16'h00CC;
+        #20;
+        // FINAL BLOCK TO LOAD AND THEN TAG LOAD
+        address = 16'b1000000000001110; // tag 1, set 1, offset 0
+        data_in = 16'h00CD;
+        load_tag = 1;
+        #20;
+
+
+        // SAME ADDR SHOULD HIT
+        address = 16'b0000000000000000; // tag 3, set 1, offset 0
+        load_tag = 0; load_data = 0;
+        #20;
+        // SAME BLOCK SHOULD HIT
+        address = 16'b1000000000000110; // tag 3, set 1, offset 0
         #20;
         // DIFF ADDRESS SHOULD MISS
         address = 16'b0000011000001000; // tag 3, set 1, offset 0

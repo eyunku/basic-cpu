@@ -7,7 +7,7 @@
 // tag: 16 - 6 - 3 = 6 tag bits
 module addr_tag_decode(
 	input [15:0] address,
-  	output [6:0] tag_out,
+  	output [5:0] tag_out,
 	output [7:0] offset_onehot,
 	output [63:0] set_onehot
 );

@@ -27,19 +27,23 @@ module i_cache (
   wire [63:0] set_onehot;
 
   // tags from 2ways
-  wire [7:0] tag_out;
+  wire [6:0] tag_out;
 
   // data array
   wire [15:0] data1;
   wire [15:0] data2;
   
   // hit/miss logic
-  wire [2:0] lru_sig;
-  wire cache_hit;
-  assign cache_miss = ~cache_hit;
+  wire lru_sig; // used by data when loading
+  wire way; // used by data when we hit: 0 -> way1, 1 -> way2
+  wire [63:0] cache_hit;
+  assign cache_miss = ~ (| cache_hit);
+
+  // which data way to use: 0 -> way1, 1 -> way2
+  wire dataway = cache_miss ? lru_sig : way;
 
   // data out on a hit
-  assign data_out = cache_miss ? 1'bz : (lru_sig[1] ? data2 : data1);
+  assign data_out = cache_miss ? 1'bz : (dataway ? data2 : data1);
 
   addr_tag_decode addressdecoder(
     .address(address),
@@ -47,7 +51,8 @@ module i_cache (
     .offset_onehot(offset_onehot),
     .set_onehot(set_onehot)
   );
-
+  // assert offset_onehot is onehot
+  // assert set_onehot is onehot
 
   // the metadata arrays
   MetaDataArray MDarray(
@@ -58,7 +63,8 @@ module i_cache (
     .BlockEnable(set_onehot),  // 64 bit encoded one-hot
     .DataOut(tag_out),
     .CacheHit(cache_hit),
-    .lru_sig(lru_sig)
+    .lru_sig(lru_sig),
+    .way(way)
   );
   
 
@@ -68,7 +74,7 @@ module i_cache (
     .rst(rst),
     .DataIn(data_in),
     .Write(load_data),
-    .BlockEnable(set_onehot & {64{~lru_sig[0]}}),
+    .BlockEnable(set_onehot & {64{~dataway}}),
     .WordEnable(offset_onehot),
     .DataOut(data1)
   );
@@ -78,7 +84,7 @@ module i_cache (
     .rst(rst),
     .DataIn(data_in),
     .Write(load_data),
-    .BlockEnable(set_onehot & {64{~lru_sig[1]}}),
+    .BlockEnable(set_onehot & {64{dataway}}),
     .WordEnable(offset_onehot),
     .DataOut(data2)
   );

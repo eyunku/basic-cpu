@@ -8,16 +8,17 @@
 */
 
 module t_cache ();
-    reg clk, rst, load_data, load_tag;
+    reg clk, rst, load_data, load_tag, write;
     reg [15:0] address, data_in;
     wire [15:0] data_out;
     wire cache_miss;  
 
-    i_cache dut (
+    d_cache dut (
         .clk(clk),
         .rst(rst),
         .address(address),
         .data_in(data_in),
+        .write(write),
         .load_data(load_data),
         .load_tag(load_tag),
         .data_out(data_out),
@@ -30,7 +31,7 @@ module t_cache ();
     // DIFF TAG BITS
     initial begin
         // INITIALIZE EVERYTHING
-        clk = 0; rst = 1; load_data = 0; load_tag = 0;
+        clk = 0; rst = 1; load_data = 0; load_tag = 0; write = 0;
         #10; #40; rst = 0;
         // TEST INITIAL CACHE MISS on invalid
         address = 16'b0000000000000000; // tag 0, set 0, offset 0
@@ -108,11 +109,16 @@ module t_cache ();
 
 
         // SAME ADDR SHOULD HIT
-        address = 16'b0000000000000000; // tag 3, set 1, offset 0
+        address = 16'b1000000000000000; // tag 3, set 1, offset 0
         load_tag = 0; load_data = 0;
         #20;
-        // SAME BLOCK SHOULD HIT
+        // SAME BLOCK SHOULD HIT AND WRITE NEW DATA
         address = 16'b1000000000000110; // tag 3, set 1, offset 0
+        write = 1;
+        data_in = 16'h00FF;
+        #20;
+        address = 16'b1000000000000110; // tag 3, set 1, offset 0
+        write = 0;
         #20;
         // DIFF ADDRESS SHOULD MISS
         address = 16'b0000011000001000; // tag 3, set 1, offset 0

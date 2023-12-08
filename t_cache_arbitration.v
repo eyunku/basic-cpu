@@ -46,7 +46,7 @@ module t_arbitration();
         d_addr = 16'h0; d_data = 16'h0; i_addr = 16'h0;
         #20
         if (d_valid == 1'b1 | i_valid == 1'b1) begin
-            $display("Case 1 Error: no action");
+            $display("Case 1 Error: no action expected");
             $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
         end
 
@@ -54,27 +54,52 @@ module t_arbitration();
         d_enable = 1'b1; d_write = 1'b1; i_enable = 1'b0; 
         d_addr = 16'h0; d_data = 16'hFFFF; i_addr = 16'h0;
         #20
+        // should not recieve any output after write
+        if (d_valid == 1'b1 | i_valid == 1'b1) begin
+            $display("Case 2 Error: no output after write expected");
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+
+        // Read request by cache-D
         d_enable = 1'b1; d_write = 1'b0; i_enable = 1'b0; 
         d_addr = 16'h0; d_data = 16'h0; i_addr = 16'h0;
         #80
-        $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        if (d_valid == 1'b0 | i_valid == 1'b1 | data_out != 16'hFFFF) begin
+            $display("Case 2 Error: output after read expected");
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
 
-        // Case 3: read request + write request in parallel
+        // Case 3: read request from cache-I and write request from cache-D in parallel
         d_enable = 1'b1; d_write = 1'b1; i_enable = 1'b1; 
         d_addr = 16'h2; d_data = 16'h1234; i_addr = 16'h2;
-        #80
-        $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
-        // Read request after to check proper write
+        #20
+        // Write request is deasserted, read request is maintained
         d_enable = 1'b0; d_write = 1'b0; i_enable = 1'b1; 
         d_addr = 16'h2; d_data = 16'h1234; i_addr = 16'h2;
-        #80
-        $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        #60
+        // 4 cycles since write request and 3 cycles since read request
+        // Check that read was not prioritized over a write
+        if (d_valid == 1'b1 | i_valid == 1'b1) begin
+            $display("Case 3 Error: cache-I read is prioritized over cache-D write");
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+        #20
+        // Check for read request
+        if (d_valid == 1'b1 | i_valid == 1'b0 | data_out != 16'h1234) begin
+            $display("Case 3 Error: read request after write expected");
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
 
-        // Case 4: read requests from both blocks
+        // Case 4: check incoming read requests from both caches
         d_enable = 1'b1; d_write = 1'b0; i_enable = 1'b1; 
         d_addr = 16'h0; d_data = 16'hFFFF; i_addr = 16'h2;
         #80
-        $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        // Check that cache-D was requested first
+        if (d_valid == 1'b0 | i_valid == 1'b1 | data_out != 16'hFFFF) begin
+            $display("Case 4 Error: cache-D read request expected");
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+
     
         $stop;
     end

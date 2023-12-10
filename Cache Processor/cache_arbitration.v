@@ -38,6 +38,9 @@ module cache_to_mem(
     // prioritize cache_d requests
     assign who = (d_enable | d_enable & d_write) ? CACHE_D :
                  (i_enable) ? CACHE_I : CACHE_NONE;
+    
+    wire [1:0] who_next;
+    dff WHO[1:0] (.q(who_next[1:0]), .d(who[1:0]), .wen(1'b1), .clk(clk), .rst(rst));
 
     // set memory input based on cache
     assign enable = (who == CACHE_D) ? d_enable : 
@@ -63,6 +66,6 @@ module cache_to_mem(
         .data_out(data_out)
     );
 
-    assign d_valid = (who == CACHE_D) ? data_valid : 1'b0;
-    assign i_valid = (who == CACHE_I) ? data_valid : 1'b0;
+    assign d_valid = (who_next == CACHE_D) ? data_valid : 1'b0;
+    assign i_valid = (who_next == CACHE_I) ? data_valid : 1'b0;
 endmodule

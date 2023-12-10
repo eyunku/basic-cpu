@@ -32,7 +32,7 @@ module cache_fill_FSM (
     wire [15:0] addr_curr, addr_next;
 
     // State transition, WAIT/IDLE
-    assign transition = (miss_detected & ~state_curr) | done;
+    assign transition = (miss_detected & ~state_curr) | done; // TODO, done relies on state_curr, state_curr relies on done implicit (transition)
     dff STATE (.q(state_curr), .d(~state_curr), .wen(transition), .clk(clk), .rst(rst));
 
     // Current Address for retrieving block

@@ -10,6 +10,7 @@ module t_integration_Controller_Arbitration();
     // Cache_I arguments
     reg miss_detected_I; // active high when tag match logic detects a miss
     reg [15:0] miss_address_I; // address that missed the cache
+    // TODO breaks, fix is to change from wire => reg
     wire fsm_busy_I; // asserted while FSM is busy handling the miss (can be used as pipeline stall signal)
     wire write_data_array_I; // write enable to cache data array to signal when filling with memory_data
     wire write_tag_array_I; // write enable to cache tag array to signal when all words are filled in to data array
@@ -37,7 +38,7 @@ module t_integration_Controller_Arbitration();
         .miss_address(miss_address_I),
         .memory_data_in(data_out),
         .memory_data_valid(i_valid),
-        .fsm_busy(fsm_busy_I),
+        .fsm_busy(fsm_busy_I), // TODO breaks, fix is to manually set fsm
         .write_data_array(write_data_array_I),
         .write_tag_array(write_tag_array_I),
         .memory_address(memory_address_I),
@@ -69,6 +70,8 @@ module t_integration_Controller_Arbitration();
     * Case 1: no cache misses or writes
     * 
     * Case 2: read request from cache-I
+    *
+    * Case 3: write from cache-D
     **/
 
     // Will only check that output from cache controller to upper level modules (cpu + cache) function correctly
@@ -78,6 +81,7 @@ module t_integration_Controller_Arbitration();
         miss_detected_I = 1'b0; miss_address_I = 16'h0;
         miss_detected_D = 1'b0; miss_address_D = 16'h0;
         d_write = 1'b0; d_data = 16'h0000;
+        // fsm_busy_I = 1'b0;
         #20
         rst_n = 1'b1; rst = 1'b0;
         #20
@@ -102,6 +106,7 @@ module t_integration_Controller_Arbitration();
         miss_detected_I = 1'b1; miss_address_I = 16'h000F;
         miss_detected_D = 1'b0; miss_address_D = 16'h0;
         d_write = 1'b0; d_data = 16'h0000;
+        //fsm_busy_I = 1'b1; // TODO uncomment with other changes to get a manual fix
         #1
         // fsm_busy check
         if (fsm_busy_I == 1'b0 | fsm_busy_D == 1'b1) begin
@@ -119,7 +124,6 @@ module t_integration_Controller_Arbitration();
             $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
         end
         #79
-        miss_detected_I = 1'b0;
         // first read is done correctly
         if (fsm_busy_I == 1'b0 | write_data_array_I == 1'b0 | write_tag_array_I == 1'b1 |
             fsm_busy_D == 1'b1 | write_data_array_D == 1'b1 | write_data_array_D == 1'b1) begin
@@ -138,9 +142,10 @@ module t_integration_Controller_Arbitration();
         end
         #560
         // last read is done correctly
+        // fsm_busy_I = 1'b0;
         if (fsm_busy_I == 1'b1 | write_data_array_I == 1'b0 | write_tag_array_I == 1'b0 |
             fsm_busy_D == 1'b1 | write_data_array_D == 1'b1 | write_data_array_D == 1'b1) begin
-            $display("Case 2 Error: expected 2 byte chunk from memory");
+            $display("Case 2 Error: expected tag assert");
             // Recieved by Cache-I and Cache-D
             $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
                     write_data_array_I, write_tag_array_I, memory_data_out_I);
@@ -153,7 +158,10 @@ module t_integration_Controller_Arbitration();
             // output from arbitration module
             $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
         end
+
+
         $stop;
+        $finish;
     end
     
     always begin

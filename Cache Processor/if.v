@@ -24,6 +24,19 @@ module mod_F (
         .wr(1'b0), 
         .clk(clk), 
         .rst(rst));
+    
+    wire [15:0] data_in, data_out;
+    wire write, load_data, load_tag, cache_miss;
+    i_cache instruction_mem (
+        .clk(clk), .rst(rst),
+        .address(pc_curr), // address to be decoded
+        .data_in(data_in), // data coming in for cache loading
+        .write(write),
+        .load_data(load_data), //  on when writing to data_array
+        .load_tag(load_tag), // on when writing to metadata_array
+        .data_out(instruction), // returns data on a hit (only valid on hits)
+        .cache_miss(cache_miss) // incure a miss 
+    );
 
     // adder
     carry_lookahead next(.a(pc_curr), .b(16'h2), .sum(pc_curr2), .overflow(), .mode(1'b0));

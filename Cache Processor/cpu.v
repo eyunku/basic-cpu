@@ -10,13 +10,20 @@
 `include "forwarding_logic.v"
 `include "hazard_detection.v"
 
-
 `include "if.v"
 `include "id.v"
 `include "ex.v"
 `include "mem.v"
 `include "wb.v"
 `include "pipe.v"
+
+`include "cache_arbitration.v"
+`include "cache_controller.v"
+`include "cache.v"
+`include "array_helpers.v"
+`include "metadata_array.v"
+`include "data_array.v"
+`include "multicycle_memory.v"
 
 module mod_CPU (
         input clk, rst_n,

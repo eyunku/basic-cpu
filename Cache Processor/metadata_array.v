@@ -1,5 +1,3 @@
-`include "dff.v"
-
 //Tag Array of 64  blocks
 //Each block will have 1 byte
 //BlockEnable is one-hot

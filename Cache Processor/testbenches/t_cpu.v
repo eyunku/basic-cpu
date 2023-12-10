@@ -1,3 +1,5 @@
+`include "cpu.v"
+
 module cpu_ptb();
   
 
@@ -38,7 +40,7 @@ module cpu_ptb();
 
      
 
-   cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
+   mod_cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
    
 
 
@@ -172,31 +174,31 @@ module cpu_ptb();
    // Is processor halted (1 bit signal)
    
 
-   assign Inst = DUT.p0.instr;
+   assign Inst = DUT.instruction_IF;
    //Instruction fetched in the current cycle
    
-   assign RegWrite = DUT.p0.regWrite;
+   assign RegWrite = DUT.regwrite_WB;
    // Is register file being written to in this cycle, one bit signal (1 means yes, 0 means no)
   
-   assign WriteRegister = DUT.p0.DstwithJmout;
+   assign WriteRegister = DUT.DstReg_WB;
    // If above is true, this should hold the name of the register being written to. (4 bit signal)
    
-   assign WriteData = DUT.p0.wData;
+   assign WriteData = DUT.DstData_WB;
    // If above is true, this should hold the Data being written to the register. (16 bits)
    
-   assign MemRead =  (DUT.p0.memRxout & ~DUT.p0.notdonem);
+   assign MemRead =  (DUT.memenable_MEM & ~DUT.memwrite_MEM);
    // Is memory being read from, in this cycle. one bit signal (1 means yes, 0 means no)
    
-   assign MemWrite = (DUT.p0.memWxout & ~DUT.p0.notdonem);
+   assign MemWrite = (DUT.memenable_MEM & DUT.memwrite_MEM);
    // Is memory being written to, in this cycle (1 bit signal)
    
-   assign MemAddress = DUT.p0.data1out;
+   assign MemAddress = DUT.aluout_MEM;
    // If there's a memory access this cycle, this should hold the address to access memory with (for both reads and writes to memory, 16 bits)
    
-   assign MemDataIn = DUT.p0.data2out;
+   assign MemDataIn = DUT.SrcData2_MEM;
    // If there's a memory write in this cycle, this is the Data being written to memory (16 bits)
    
-   assign MemDataOut = DUT.p0.readData;
+   assign MemDataOut = DUT.mem;
    // If there's a memory read in this cycle, this is the data being read out of memory (16 bits)
 
    assign ICacheReq = DUT.p0.icr;

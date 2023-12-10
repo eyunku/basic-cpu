@@ -1,6 +1,3 @@
-`include "array_helpers.v"
-`include "metadata_array.v"
-`include "data_array.v"
 //cache.v, organizing my thoughts for the cache
 
 // Cache is 2048B in size, 2-way set-associative, with cache blocks of 16B each

@@ -1,8 +1,8 @@
-`include "multicycle_memory.v"
-`include "cache_arbitration.v"
-`include "cache_controller.v"
-`include "dff.v" 
-`include "alu.v"
+`include "./multicycle_memory.v"
+`include "./ache_arbitration.v"
+`include "./cache_controller.v"
+`include "./dff.v" 
+`include "./alu.v"
 
 module t_integration_Controller_Arbitration();
     reg clk, rst_n, rst;

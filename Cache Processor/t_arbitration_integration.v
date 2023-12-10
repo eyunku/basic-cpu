@@ -168,25 +168,81 @@ module t_integration_Controller_Arbitration();
         miss_detected_D = 1'b0; miss_address_D = 16'h0;
         d_write_address = 16'h0;
         #20
-        d_write = 1'b1; d_data = 16'hF;
+        d_write = 1'b1;
+        d_write_address = 16'h0; d_data = 16'hF;
         #20
         d_write_address = 16'h2; d_data = 16'hE;
         #20
         d_write_address = 16'h4; d_data = 16'hD;
         #20
+        d_write_address = 16'hE; d_data = 16'hB;
+        #20
         d_write = 1'b0; d_data = 16'h0000;
         miss_detected_I = 1'b1;
-        #160
-        $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
-                write_data_array_I, write_tag_array_I, memory_data_out_I);
-        $display("write_data_array_D: %b write_tag_array_D: %b memory_data_out_D: %h",
-                write_data_array_D, write_tag_array_D, memory_data_out_D);
-        // Cache-I request to controller
-        $display("fsm_busy_I: %b memory_address_I: %h", fsm_busy_I, memory_address_I);
-        // Cache-D request to controller
-        $display("fsm_busy_D: %b memory_address_D: %h", fsm_busy_D, memory_address_D);
-        // output from arbitration module
-        $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        #80
+        if (write_data_array_I == 1'b0 | write_tag_array_I == 1'b1 | memory_data_out_I != 16'hF |
+            write_data_array_D == 1'b1 | write_tag_array_D == 1'b1 |
+            fsm_busy_I == 1'b0 | fsm_busy_D == 1'b1) begin
+            $display("Case 3 Error: fetching first chunk");
+            $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
+                    write_data_array_I, write_tag_array_I, memory_data_out_I);
+            $display("write_data_array_D: %b write_tag_array_D: %b memory_data_out_D: %h",
+                    write_data_array_D, write_tag_array_D, memory_data_out_D);
+            // Cache-I request to controller
+            $display("fsm_busy_I: %b memory_address_I: %h", fsm_busy_I, memory_address_I);
+            // Cache-D request to controller
+            $display("fsm_busy_D: %b memory_address_D: %h", fsm_busy_D, memory_address_D);
+            // output from arbitration module
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+        #80
+        if (write_data_array_I == 1'b0 | write_tag_array_I == 1'b1 | memory_data_out_I != 16'hE |
+            write_data_array_D == 1'b1 | write_tag_array_D == 1'b1 |
+            fsm_busy_I == 1'b0 | fsm_busy_D == 1'b1) begin
+            $display("Case 3 Error: fetching second chunk");
+            $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
+                    write_data_array_I, write_tag_array_I, memory_data_out_I);
+            $display("write_data_array_D: %b write_tag_array_D: %b memory_data_out_D: %h",
+                    write_data_array_D, write_tag_array_D, memory_data_out_D);
+            // Cache-I request to controller
+            $display("fsm_busy_I: %b memory_address_I: %h", fsm_busy_I, memory_address_I);
+            // Cache-D request to controller
+            $display("fsm_busy_D: %b memory_address_D: %h", fsm_busy_D, memory_address_D);
+            // output from arbitration module
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+        #80
+        if (write_data_array_I == 1'b0 | write_tag_array_I == 1'b1 | memory_data_out_I != 16'hD |
+            write_data_array_D == 1'b1 | write_tag_array_D == 1'b1 |
+            fsm_busy_I == 1'b0 | fsm_busy_D == 1'b1) begin
+            $display("Case 3 Error: fetching third chunk");
+            $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
+                    write_data_array_I, write_tag_array_I, memory_data_out_I);
+            $display("write_data_array_D: %b write_tag_array_D: %b memory_data_out_D: %h",
+                    write_data_array_D, write_tag_array_D, memory_data_out_D);
+            // Cache-I request to controller
+            $display("fsm_busy_I: %b memory_address_I: %h", fsm_busy_I, memory_address_I);
+            // Cache-D request to controller
+            $display("fsm_busy_D: %b memory_address_D: %h", fsm_busy_D, memory_address_D);
+            // output from arbitration module
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
+        #400
+        if (write_data_array_I == 1'b0 | write_tag_array_I == 1'b0 | memory_data_out_I != 16'hB |
+            write_data_array_D == 1'b1 | write_tag_array_D == 1'b1 |
+            fsm_busy_I == 1'b1 | fsm_busy_D == 1'b1) begin
+            $display("Case 3 Error: fetching last chunk");
+            $display("write_data_array_I: %b write_tag_array_I: %b memory_data_out_I: %h",
+                    write_data_array_I, write_tag_array_I, memory_data_out_I);
+            $display("write_data_array_D: %b write_tag_array_D: %b memory_data_out_D: %h",
+                    write_data_array_D, write_tag_array_D, memory_data_out_D);
+            // Cache-I request to controller
+            $display("fsm_busy_I: %b memory_address_I: %h", fsm_busy_I, memory_address_I);
+            // Cache-D request to controller
+            $display("fsm_busy_D: %b memory_address_D: %h", fsm_busy_D, memory_address_D);
+            // output from arbitration module
+            $display("d_valid: %b i_valid: %b data_out: %h", d_valid, i_valid, data_out);
+        end
 
 
         // Case 3: 

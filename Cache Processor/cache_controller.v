@@ -12,7 +12,7 @@
 **/
 
 module cache_fill_FSM (
-    input clk, rst_n,
+    input clk, rst,
     input miss_detected, // active high when tag match logic detects a miss
     input [15:0] miss_address, // address that missed the cache
     input [15:0] memory_data_in, // data returned by memory (after delay)
@@ -23,10 +23,6 @@ module cache_fill_FSM (
     output [15:0] memory_address, // address to read from memory
     output [15:0] memory_data_out
 );
-
-    wire rst;
-    assign rst = ~rst_n;
-
     // Define state and addr register
     wire state_curr, done, transition;
     wire [15:0] addr_curr, addr_next;

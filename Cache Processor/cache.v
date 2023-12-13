@@ -13,7 +13,6 @@ module i_cache (
   input clk, rst,
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
-  input write,
   input load_data, //  on when writing to data_array
   input load_tag, // on when writing to metadata_array
   output [15:0] data_out, // returns data on a hit (only valid on hits)
@@ -98,6 +97,7 @@ module d_cache (
   input clk, rst,
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
+  input [15:0] data_write, // data coming in from cache write
   input write,
   input load_data, //  on when writing to data_array
   input load_tag, // on when writing to metadata_array
@@ -113,6 +113,7 @@ module d_cache (
   wire [6:0] tag_out;
 
   // data array
+  wire [15:0] data_load;
   wire [15:0] data1;
   wire [15:0] data2;
   
@@ -152,11 +153,12 @@ module d_cache (
   
 
   // the actual data_arrs
+  assign data_load = (write & ~cache_miss) ? data_write : data_in;
   DataArray Dway1(
     .clk(clk),
     .rst(rst),
-    .DataIn(data_in),
-    .Write(load_data  | (write & ~cache_miss)),
+    .DataIn(data_load),
+    .Write(load_data | (write & ~cache_miss)),
     .BlockEnable(set_onehot & {64{~dataway}}),
     .WordEnable(offset_onehot),
     .DataOut(data1)
@@ -165,7 +167,7 @@ module d_cache (
   DataArray Dway2(
     .clk(clk),
     .rst(rst),
-    .DataIn(data_in),
+    .DataIn(data_load),
     .Write(load_data | (write & ~cache_miss)),
     .BlockEnable(set_onehot & {64{dataway}}),
     .WordEnable(offset_onehot),

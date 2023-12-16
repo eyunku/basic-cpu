@@ -1,4 +1,9 @@
-`include "../cache.v"
+`include "cache.v"
+`include "array_helpers.v"
+`include "metadata_array.v"
+`include "data_array.v"
+`include "dff.v" 
+
 
 /*
 * Some issues that can be forseen

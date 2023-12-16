@@ -11,9 +11,19 @@ module MetaDataArray(
 	output [6:0] DataOut,
 	output [63:0] CacheHit,
 	output lru_sig,
-	output way
+	output way	
+);
+
+	MBlock Mblk[63:0](
+		.clk(clk), .rst(rst), 
+		.Din(DataIn), 
+		.WriteEnable(Write), 
+		.Enable(BlockEnable), 
+		.Dout(DataOut), 
+		.CacheHit(CacheHit), 
+		.lru_sig(lru_sig), 
+		.way(way)
 	);
-	MBlock Mblk[63:0](.clk(clk), .rst(rst), .Din(DataIn), .WriteEnable(Write), .Enable(BlockEnable), .Dout(DataOut), .CacheHit(CacheHit), .lru_sig(lru_sig), .way(way));
 endmodule
 
 module MBlock(
@@ -25,8 +35,8 @@ module MBlock(
 	output CacheHit,
 	output lru_sig,
 	output way
-	);
-
+);
+	// t1, t2 => {1 bit valid, 6 bit tag}
 	wire [6:0] t1;
 	wire [6:0] t2;
 	wire h1 = (t1 === 7'bz) ? 1'b0 : (t1 == Din);

@@ -110,7 +110,9 @@ module t_cache_integration();
     // Will do extra checks for writes
     initial begin
         clk = 1'b0; rst = 1'b1; #80
-        rst = 1'b1; #20
+        rst = 1'b0; #20
+        insns_address_i = 16'h0000;
+        insns_address_d = 16'h0000; insns_data_in_d = 16'h0000; insns_write_d = 1'b0;
         #640
 
         $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);

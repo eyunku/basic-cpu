@@ -23,6 +23,24 @@ module t_cache_integration();
     wire mem_data_valid_i;
     wire mem_tag_valid_i;
 
+    // === d_cache wires ===
+    reg [15:0] insns_address_d;
+    reg [15:0] insns_data_in_d;
+    reg insns_write_d;
+    wire [15:0] insns_data_out_d;
+    wire cache_miss_d;
+    
+    // === d_cache controller ===
+    wire [15:0] memory_address_d, mem_data_d;
+    wire mem_data_valid_d;
+    wire mem_tag_valid_d;
+    wire fsm_busy_d;
+    
+    // === arbitration ===
+    wire [15:0] d_addr, mem_data_out;
+    wire d_valid;
+    wire i_valid;
+
     i_cache dut_cache_I (
         .clk(clk), .rst(rst),
         .address(insns_address_i),
@@ -45,19 +63,6 @@ module t_cache_integration();
         .memory_address(memory_address_i),
         .memory_data_out(mem_data_i)
     );
-
-    // === d_cache wires ===
-    reg [15:0] insns_address_d;
-    reg [15:0] insns_data_in_d;
-    reg insns_write_d;
-    wire [15:0] insns_data_out_d;
-    wire cache_miss_d;
-    
-    // === d_cache controller ===
-    wire [15:0] memory_address_d, mem_data_d;
-    wire mem_data_valid_d;
-    wire mem_tag_valid_d;
-    wire fsm_busy_d;
 
     d_cache dut_cache_D (
         .clk(clk), .rst(rst),
@@ -83,11 +88,6 @@ module t_cache_integration();
         .memory_address(memory_address_d),
         .memory_data_out(mem_data_d)
     );
-
-    // === arbitration ===
-    wire [15:0] d_addr, mem_data_out;
-    wire d_valid;
-    wire i_valid;
 
     assign d_addr = (insns_write_d) ? insns_data_in_d : memory_address_d;
     cache_to_mem dut_arbitration (

@@ -14,13 +14,14 @@ module t_cache_integration();
 
     // === i_cache wires ===
     reg [15:0] insns_address_i;
-    reg [15:0] mem_data_i;
-    reg mem_data_valid_i;
-    reg mem_tag_valid_i;
     wire [15:0] insns_data_out_i;
     wire cache_miss_i;
 
     // === i_cache controller ===
+    wire [15:0] memory_address_i, mem_data_i;
+    wire fsm_busy_i;
+    wire mem_data_valid_i;
+    wire mem_tag_valid_i;
 
     i_cache dut_cache_I (
         .clk(clk), .rst(rst),
@@ -36,31 +37,33 @@ module t_cache_integration();
         .clk(clk), .rst(rst),
         .miss_detected(cache_miss_i),
         .miss_address(insns_address_i),
-        .memory_data_in(),
-        .memory_data_valid(),
-        .fsm_busy(), // TODO breaks, fix is to manually set fsm
+        .memory_data_in(mem_data_out),
+        .memory_data_valid(i_valid),
+        .fsm_busy(fsm_busy_i), // TODO breaks, fix is to manually set fsm
         .write_data_array(mem_data_valid_i),
         .write_tag_array(mem_tag_valid_i),
-        .memory_address(),
+        .memory_address(memory_address_i),
         .memory_data_out(mem_data_i)
     );
 
-
     // === d_cache wires ===
     reg [15:0] insns_address_d;
-    reg [15:0] mem_data_d;
-    reg [15:0] insns_data_write_d;
+    reg [15:0] insns_data_in_d;
     reg insns_write_d;
-    reg mem_data_valid_d;
-    reg mem_tag_valid_d;
     wire [15:0] insns_data_out_d;
     wire cache_miss_d;
+    
+    // === d_cache controller ===
+    wire [15:0] memory_address_d, mem_data_d;
+    wire mem_data_valid_d;
+    wire mem_tag_valid_d;
+    wire fsm_busy_d;
 
     d_cache dut_cache_D (
         .clk(clk), .rst(rst),
         .address(insns_address_d),
         .data_in(mem_data_d),
-        .data_write(insns_data_write_d),
+        .data_write(insns_data_in_d),
         .write(insns_write_d),
         .load_data(mem_data_valid_d),
         .load_tag(mem_tag_valid_d),
@@ -70,23 +73,29 @@ module t_cache_integration();
     
     cache_fill_FSM dut_controller_D (
         .clk(clk), .rst(rst),
-        .miss_detected(),
-        .miss_address(),
-        .memory_data_in(),
-        .memory_data_valid(),
-        .fsm_busy(),
-        .write_data_array(),
-        .write_tag_array(),
-        .memory_address(),
-        .memory_data_out()
+        .miss_detected(cache_miss_d),
+        .miss_address(insns_address_d),
+        .memory_data_in(mem_data_out),
+        .memory_data_valid(d_valid),
+        .fsm_busy(fsm_busy_d),
+        .write_data_array(mem_data_valid_d),
+        .write_tag_array(mem_tag_valid_d),
+        .memory_address(memory_address_d),
+        .memory_data_out(mem_data_d)
     );
 
+    // === arbitration ===
+    wire [15:0] d_addr, mem_data_out;
+    wire d_valid;
+    wire i_valid;
+
+    assign d_addr = (insns_write_d) ? insns_data_in_d : memory_address_d;
     cache_to_mem dut_arbitration (
         .clk(clk), .rst(rst), 
-        .d_enable(), .d_write(), .i_enable(), 
-        .d_addr(), .d_data(), .i_addr(),
-        .d_valid(), .i_valid(),
-        .data_out()
+        .d_enable(fsm_busy_d | insns_write_d), .d_write(insns_write_d), .i_enable(fsm_busy_i), 
+        .d_addr(d_addr), .d_data(insns_data_in_d), .i_addr(memory_address_i),
+        .d_valid(d_valid), .i_valid(i_valid),
+        .data_out(mem_data_out)
     );
 
     /**
@@ -102,11 +111,9 @@ module t_cache_integration();
     initial begin
         clk = 1'b0; rst = 1'b1; #80
         rst = 1'b1; #20
-        address_i = 16'h0; address_d = 16'h0; 
-        write_data_d = 16'h0; write_d = 16'h0;
         #640
 
-        $display("data_out_i: %h data_out_d: %h", data_out_i, data_out_d);
+        $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
         $stop;
         $finish;
     end

@@ -20,6 +20,8 @@ module t_cache_integration();
     wire [15:0] insns_data_out_i;
     wire cache_miss_i;
 
+    // === i_cache controller ===
+
     i_cache dut_cache_I (
         .clk(clk), .rst(rst),
         .address(insns_address_i),
@@ -32,15 +34,15 @@ module t_cache_integration();
 
     cache_fill_FSM dut_controller_I (
         .clk(clk), .rst(rst),
-        .miss_detected(),
-        .miss_address(),
+        .miss_detected(cache_miss_i),
+        .miss_address(insns_address_i),
         .memory_data_in(),
         .memory_data_valid(),
         .fsm_busy(), // TODO breaks, fix is to manually set fsm
-        .write_data_array(),
-        .write_tag_array(),
+        .write_data_array(mem_data_valid_i),
+        .write_tag_array(mem_tag_valid_i),
         .memory_address(),
-        .memory_data_out()
+        .memory_data_out(mem_data_i)
     );
 
 
@@ -59,7 +61,7 @@ module t_cache_integration();
         .address(insns_address_d),
         .data_in(mem_data_d),
         .data_write(insns_data_write_d),
-        .write(),
+        .write(insns_write_d),
         .load_data(mem_data_valid_d),
         .load_tag(mem_tag_valid_d),
         .data_out(insns_data_out_d),

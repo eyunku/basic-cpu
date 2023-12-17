@@ -10,7 +10,7 @@
 // initialize a data-array and a metadata-array
 // miss_en bit means, we are populating cache
 module i_cache (
-  input clk, rst,
+  input clk, rst, enable,
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
   input load_data, //  on when writing to data_array
@@ -57,7 +57,7 @@ module i_cache (
     .rst(rst),
     .DataIn({1'b1, tag_str}),
     .Write(load_tag),
-    .BlockEnable(set_onehot),  // 64 bit encoded one-hot
+    .BlockEnable(set_onehot & {64{enable}}),  // 64 bit encoded one-hot
     .DataOut(tag_out),
     .CacheHit(cache_hit),
     .lru_sig(lru_sig),
@@ -71,7 +71,7 @@ module i_cache (
     .rst(rst),
     .DataIn(data_in),
     .Write(load_data),
-    .BlockEnable(set_onehot & {64{~dataway}}),
+    .BlockEnable(set_onehot & {64{~dataway}} & {64{enable}}),
     .WordEnable(offset_onehot),
     .DataOut(data1)
   );
@@ -81,7 +81,7 @@ module i_cache (
     .rst(rst),
     .DataIn(data_in),
     .Write(load_data),
-    .BlockEnable(set_onehot & {64{dataway}}),
+    .BlockEnable(set_onehot & {64{dataway}} & {64{enable}}),
     .WordEnable(offset_onehot),
     .DataOut(data2)
   );
@@ -94,7 +94,7 @@ endmodule
 // D-cache
 // initialize a data-array and a metadata-array
 module d_cache (
-  input clk, rst,
+  input clk, rst, enable,
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
   input [15:0] data_write, // data coming in from cache write
@@ -144,7 +144,7 @@ module d_cache (
     .rst(rst),
     .DataIn({1'b1, tag_str}),
     .Write(load_tag),
-    .BlockEnable(set_onehot),  // 64 bit encoded one-hot
+    .BlockEnable(set_onehot & {64{enable}}),  // 64 bit encoded one-hot
     .DataOut(tag_out),
     .CacheHit(cache_hit),
     .lru_sig(lru_sig),
@@ -159,7 +159,7 @@ module d_cache (
     .rst(rst),
     .DataIn(data_load),
     .Write(load_data | (write & ~cache_miss)),
-    .BlockEnable(set_onehot & {64{~dataway}}),
+    .BlockEnable(set_onehot & {64{~dataway}} & {64{enable}}),
     .WordEnable(offset_onehot),
     .DataOut(data1)
   );
@@ -169,7 +169,7 @@ module d_cache (
     .rst(rst),
     .DataIn(data_load),
     .Write(load_data | (write & ~cache_miss)),
-    .BlockEnable(set_onehot & {64{dataway}}),
+    .BlockEnable(set_onehot & {64{dataway}} & {64{enable}}),
     .WordEnable(offset_onehot),
     .DataOut(data2)
   );

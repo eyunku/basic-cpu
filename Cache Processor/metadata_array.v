@@ -39,33 +39,31 @@ module MBlock(
 	// t1, t2 => {1 bit valid, 6 bit tag}
 	wire [6:0] t1;
 	wire [6:0] t2;
-	wire h1 = (t1 === 7'bz) ? 1'b0 : (t1 == Din);
-	wire h2 = (t2 === 7'bz) ? 1'b0 : (t2 == Din);
-	assign Dout = h1 ? t1 : (h2 ? t2 : 7'bz);
-
-	// assign hit and output
-	assign CacheHit = h1 | h2;
-	assign way = Enable ? h2 : 1'bz;
-
-	// 2 blocks for 2 way set associative
-	MCell mcw1[6:0](.clk(clk), .rst(rst), .Din(Din[6:0]), .WriteEnable(WriteEnable & ~lru_sig), .Enable(Enable), .Dout(t1));
-	MCell mcw2[6:0](.clk(clk), .rst(rst), .Din(Din[6:0]), .WriteEnable(WriteEnable & lru_sig), .Enable(Enable), .Dout(t2));
+	wire h1 = (t1 == Din);
+	wire h2 = (t2 == Din);
+	assign CacheHit = h1 | h2;  // always a valid bit: 0 or 1
 
 	// lru bit, 0 -> way1 is least recently used, and 1 -> way2 is least recently used
-	LRUCell lc1(.clk(clk), .rst(rst), .Din(h1), .WriteEnable(CacheHit), .Enable(Enable), .Dout(lru_sig));
+	// lru_inner is always a valid bit: 0 or 1
+	wire lru_inner;
+
+	// 2 blocks for 2 way set associative
+	// assert: when WriteEnable=1, CacheHit=0, then lru_inner determines which mcw to write
+	MCell mcw1[6:0](.clk(clk), .rst(rst), .Din(Din[6:0]), .WriteEnable(WriteEnable & ~lru_inner), .Enable(Enable), .Dout(t1));
+	MCell mcw2[6:0](.clk(clk), .rst(rst), .Din(Din[6:0]), .WriteEnable(WriteEnable & lru_inner), .Enable(Enable), .Dout(t2));
+	LRUCell lc1(.clk(clk), .rst(rst), .Din(h1), .WriteEnable(CacheHit & ~WriteEnable), .Enable(Enable), .Dout(lru_inner));
+
+	// assign output
+	assign Dout = (Enable & ~WriteEnable) ? (h1 ? t1 : (h2 ? t2 : 7'bz)) : 7'bz;
+	assign lru_sig = Enable ? lru_inner : 1'bz;
+	assign way = Enable ? (CacheHit ? h2 : 1'bz) : 1'bz;
 endmodule
 
 module MCell( input clk,  input rst, input Din, input WriteEnable, input Enable, output Dout);
-	wire q;
-	assign Dout = (Enable & ~WriteEnable) ? q : 1'bz;
-	dff dffm(.q(q), .d(Din), .wen(Enable & WriteEnable), .clk(clk), .rst(rst));
+	// Instead of resolving read enable logic on MCell, can push it up to the block level
+	dff dffm(.q(Dout), .d(Din), .wen(Enable & WriteEnable), .clk(clk), .rst(rst));
 endmodule
 
-module LRUCell(
-	input clk, rst, Din, WriteEnable, Enable,
-	output Dout
-);
-	wire q;
-	assign Dout = (Enable) ? q : 1'bz;
-	dff dfflru(.q(q), .d(Din), .wen(Enable & WriteEnable), .clk(clk), .rst(rst));
+module LRUCell( input clk,  input rst, input Din, input WriteEnable, input Enable, output Dout);
+	dff dffm(.q(Dout), .d(Din), .wen(Enable & WriteEnable), .clk(clk), .rst(rst));
 endmodule

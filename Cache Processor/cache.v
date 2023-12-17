@@ -40,7 +40,7 @@ module i_cache (
   wire dataway = cache_miss ? lru_sig : way;
 
   // data out on a hit
-  assign data_out = cache_miss ? 1'bz : (dataway ? data2 : data1);
+  assign data_out = cache_miss ? 16'hzzzz : (dataway ? data2 : data1);
 
   addr_tag_decode addressdecoder(
     .address(address),
@@ -127,7 +127,7 @@ module d_cache (
   wire dataway = cache_miss ? lru_sig : way;
 
   // data out on a hit
-  assign data_out = cache_miss ? 1'bz : (dataway ? data2 : data1);
+  assign data_out = cache_miss ? 16'hzzzz : (dataway ? data2 : data1);
 
   addr_tag_decode addressdecoder(
     .address(address),

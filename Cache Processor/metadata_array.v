@@ -41,7 +41,7 @@ module MBlock(
 	wire [6:0] t2;
 	wire h1 = (t1 == Din);
 	wire h2 = (t2 == Din);
-	assign CacheHit = h1 | h2;  // always a valid bit: 0 or 1
+	assign CacheHit = (Enable) ? (h1 | h2) : 1'b0;  // always a valid bit: 0 or 1
 
 	// lru bit, 0 -> way1 is least recently used, and 1 -> way2 is least recently used
 	// lru_inner is always a valid bit: 0 or 1

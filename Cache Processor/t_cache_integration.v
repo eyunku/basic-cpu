@@ -93,7 +93,7 @@ module t_cache_integration();
         .memory_data_out(mem_data_d)
     );
 
-    assign d_addr = (insns_write_d) ? insns_data_in_d : memory_address_d;
+    assign d_addr = (insns_write_d) ? insns_address_d : memory_address_d;
     cache_to_mem dut_arbitration (
         .clk(clk), .rst(rst), 
         .d_enable(fsm_busy_d | insns_write_d), .d_write(insns_write_d), .i_enable(fsm_busy_i), 
@@ -114,10 +114,11 @@ module t_cache_integration();
         $dumpfile("t_cache_integration.vcd");
         $dumpvars(0, t_cache_integration);
 
-        clk = 1'b0; rst = 1'b1; #40
-        enable_i = 1'b0; enable_d = 1'b0; rst = 1'b0; #20
+        clk = 1'b0; rst = 1'b1;
         insns_address_i = 16'h0000;
         insns_address_d = 16'h0000; insns_data_in_d = 16'h0000; insns_write_d = 1'b0;
+        #40
+        enable_i = 1'b0; enable_d = 1'b0; rst = 1'b0; #20
         #800; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read misses, no memory access

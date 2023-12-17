@@ -34,9 +34,9 @@ module i_cache (
   wire lru_sig; // used by data when loading
   wire way; // used by data when we hit: 0 -> way1, 1 -> way2
   wire [63:0] cache_hit;
-  assign cache_miss = ~ (| cache_hit);
+  assign cache_miss = enable ? (~ (| cache_hit)) : 1'b0;
 
-  // which data way to use: 0 -> way1, 1 -> way2
+  // which data way to use for eviction: 0 -> way1, 1 -> way2
   wire dataway = cache_miss ? lru_sig : way;
 
   // data out on a hit
@@ -121,9 +121,10 @@ module d_cache (
   wire lru_sig; // used by data when loading
   wire way; // used by data when we hit: 0 -> way1, 1 -> way2
   wire [63:0] cache_hit;
-  assign cache_miss = ~ (| cache_hit);
+  assign cache_miss = enable ? (~(| cache_hit)) : 1'b0;
 
   // which data way to use: 0 -> way1, 1 -> way2
+  // TODO dataway can be z's
   wire dataway = cache_miss ? lru_sig : way;
 
   // data out on a hit

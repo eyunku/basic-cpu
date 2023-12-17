@@ -36,7 +36,7 @@ module cache_to_mem(
     wire [15:0] addr;
     // Determine which cache controller receives data_out
     // prioritize cache_d requests
-    assign who = (d_enable | d_enable & d_write) ? CACHE_D :
+    assign who = (d_enable | (d_enable & d_write)) ? CACHE_D :
                  (i_enable) ? CACHE_I : CACHE_NONE;
     
     wire [1:0] who_next;

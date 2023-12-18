@@ -55,7 +55,7 @@ module i_cache (
     .set_onehot(set_onehot)
   );
 
-  addr_tag_decode2 addressdecoder(
+  addr_tag_decode addressdecoder2(
     .address(load_addr),
     .tag_out(tag_str2),
     .offset_onehot(offset_onehot2),
@@ -156,7 +156,7 @@ module d_cache (
     .set_onehot(set_onehot)
   );
 
-  addr_tag_decode2 addressdecoder(
+  addr_tag_decode addressdecoder2(
     .address(load_addr),
     .tag_out(tag_str2),
     .offset_onehot(offset_onehot2),

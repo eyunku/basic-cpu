@@ -9,6 +9,8 @@
 `include "metadata_array.v"
 `include "data_array.v"
 
+// TODO create a mux that selects correct address to pipe into cache
+
 module t_cache_integration();
     reg clk, rst;
 
@@ -17,6 +19,7 @@ module t_cache_integration();
     reg enable_i;
     wire [15:0] insns_data_out_i;
     wire cache_miss_i;
+    wire [15:0] load_addr_i;
 
     // === i_cache controller ===
     wire [15:0] memory_address_i, mem_data_i;
@@ -31,6 +34,7 @@ module t_cache_integration();
     reg insns_write_d;
     wire [15:0] insns_data_out_d;
     wire cache_miss_d;
+    wire [15:0] load_addr_d;
     
     // === d_cache controller ===
     wire [15:0] memory_address_d, mem_data_d;
@@ -43,11 +47,20 @@ module t_cache_integration();
     wire d_valid;
     wire i_valid;
 
+    carry_lookahead sub2_i (
+        .a(memory_address_i), 
+        .b(16'h2), 
+        .sum(load_addr_i), 
+        .overflow(), 
+        .mode(1'b1)
+    );
+    
     i_cache dut_cache_I (
         .clk(clk), .rst(rst),
         .enable(enable_i),
         .address(insns_address_i),
         .data_in(mem_data_i),
+        .load_addr(load_addr_i),
         .load_data(mem_data_valid_i),
         .load_tag(mem_tag_valid_i),
         .data_out(insns_data_out_i),
@@ -67,12 +80,21 @@ module t_cache_integration();
         .memory_data_out(mem_data_i)
     );
 
+    carry_lookahead sub2_d (
+        .a(memory_address_d), 
+        .b(16'h2), 
+        .sum(load_addr_d), 
+        .overflow(), 
+        .mode(1'b1)
+    );
+
     d_cache dut_cache_D (
         .clk(clk), .rst(rst),
         .enable(enable_d),
         .address(insns_address_d),
         .data_in(mem_data_d),
         .data_write(insns_data_in_d),
+        .load_addr(),
         .write(insns_write_d),
         .load_data(mem_data_valid_d),
         .load_tag(mem_tag_valid_d),

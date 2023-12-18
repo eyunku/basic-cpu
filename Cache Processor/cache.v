@@ -13,6 +13,7 @@ module i_cache (
   input clk, rst, enable,
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
+  input [15:0] load_addr, // address to load data into
   input load_data, //  on when writing to data_array
   input load_tag, // on when writing to metadata_array
   output [15:0] data_out, // returns data on a hit (only valid on hits)
@@ -23,6 +24,11 @@ module i_cache (
   wire [7:0] offset_onehot;
   wire [63:0] set_onehot;
 
+  wire [5:0] tag_str2;
+  wire [7:0] offset_onehot2;
+  wire [63:0] set_onehot2;
+
+  wire [7:0] word_offset;
   // tags from 2ways
   wire [6:0] tag_out;
 
@@ -48,6 +54,13 @@ module i_cache (
     .offset_onehot(offset_onehot),
     .set_onehot(set_onehot)
   );
+
+  addr_tag_decode2 addressdecoder(
+    .address(load_addr),
+    .tag_out(tag_str2),
+    .offset_onehot(offset_onehot2),
+    .set_onehot(set_onehot2)
+  );
   // assert offset_onehot is onehot
   // assert set_onehot is onehot
 
@@ -64,15 +77,15 @@ module i_cache (
     .way(way)
   );
   
-
   // the actual data_arrs
+  assign word_offset = load_data ? set_onehot2 : set_onehot;
   DataArray Dway1(
     .clk(clk),
     .rst(rst),
     .DataIn(data_in),
     .Write(load_data),
     .BlockEnable(set_onehot & {64{~dataway}} & {64{enable}}),
-    .WordEnable(offset_onehot),
+    .WordEnable(word_offset),
     .DataOut(data1)
   );
 
@@ -82,7 +95,7 @@ module i_cache (
     .DataIn(data_in),
     .Write(load_data),
     .BlockEnable(set_onehot & {64{dataway}} & {64{enable}}),
-    .WordEnable(offset_onehot),
+    .WordEnable(word_offset),
     .DataOut(data2)
   );
   
@@ -98,6 +111,7 @@ module d_cache (
   input [15:0] address, // address to be decoded
   input [15:0] data_in, // data coming in for cache loading
   input [15:0] data_write, // data coming in from cache write
+  input [15:0] load_addr, // address to load data into
   input write,
   input load_data, //  on when writing to data_array
   input load_tag, // on when writing to metadata_array
@@ -109,6 +123,11 @@ module d_cache (
   wire [7:0] offset_onehot;
   wire [63:0] set_onehot;
 
+  wire [5:0] tag_str2;
+  wire [7:0] offset_onehot2;
+  wire [63:0] set_onehot2;
+
+  wire [7:0] word_offset;
   // tags from 2ways
   wire [6:0] tag_out;
 
@@ -136,6 +155,13 @@ module d_cache (
     .offset_onehot(offset_onehot),
     .set_onehot(set_onehot)
   );
+
+  addr_tag_decode2 addressdecoder(
+    .address(load_addr),
+    .tag_out(tag_str2),
+    .offset_onehot(offset_onehot2),
+    .set_onehot(set_onehot2)
+  );
   // assert offset_onehot is onehot
   // assert set_onehot is onehot
 
@@ -155,13 +181,14 @@ module d_cache (
 
   // the actual data_arrs
   assign data_load = (write & ~cache_miss) ? data_write : data_in;
+  assign word_offset = load_data ? set_onehot2 : set_onehot;
   DataArray Dway1(
     .clk(clk),
     .rst(rst),
     .DataIn(data_load),
     .Write(load_data | (write & ~cache_miss)),
     .BlockEnable(set_onehot & {64{~dataway}} & {64{enable}}),
-    .WordEnable(offset_onehot),
+    .WordEnable(word_offset),
     .DataOut(data1)
   );
 
@@ -171,7 +198,7 @@ module d_cache (
     .DataIn(data_load),
     .Write(load_data | (write & ~cache_miss)),
     .BlockEnable(set_onehot & {64{dataway}} & {64{enable}}),
-    .WordEnable(offset_onehot),
+    .WordEnable(word_offset),
     .DataOut(data2)
   );
   

@@ -17,8 +17,7 @@ module mod_F (
     wire [15:0] load_addr_i;
 
     // ==== i_cache controller ====
-    wire [15:0] memory_address_i, mem_data_i;
-    wire fsm_busy_i;
+    wire [15:0] mem_data_i;
     wire mem_data_valid_i;
     wire mem_tag_valid_i;
 

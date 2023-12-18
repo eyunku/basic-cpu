@@ -18,7 +18,6 @@ module mod_MEM (
     wire [15:0] memory_address_d, mem_data_d;
     wire mem_data_valid_d;
     wire mem_tag_valid_d;
-    wire fsm_busy_d;
 
     carry_lookahead sub2_d (
         .a(memory_address_d), 

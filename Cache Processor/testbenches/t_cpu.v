@@ -40,7 +40,7 @@ module cpu_ptb();
 
      
 
-   mod_cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
+   cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
    
 
 
@@ -201,16 +201,16 @@ module cpu_ptb();
    assign MemDataOut = DUT.mem;
    // If there's a memory read in this cycle, this is the data being read out of memory (16 bits)
 
-   assign ICacheReq = DUT.p0.icr;
+   assign ICacheReq = DUT.mod_f.cache_I.enable;
    // Signal indicating a valid instruction read request to cache
    
-   assign ICacheHit = DUT.p0.ich;
+   assign ICacheHit = ~(DUT.mod_f.cache_I.cache_miss);
    // Signal indicating a valid instruction cache hit
 
-   assign DCacheReq = DUT.p0.dcr;
+   assign DCacheReq = DUT.mod_mem.memenable;
    // Signal indicating a valid instruction data read or write request to cache
    
-   assign DCacheHit = DUT.p0.dch;
+   assign DCacheHit = ~(DUT.mod_mem.cache_d.cache_d);
    // Signal indicating a valid data cache hit
 
 

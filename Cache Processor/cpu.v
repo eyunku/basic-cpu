@@ -25,7 +25,7 @@
 `include "data_array.v"
 `include "multicycle_memory.v"
 
-module mod_CPU (
+module cpu (
         input clk, rst_n,
         output hlt,
         output [15:0] pc);
@@ -102,17 +102,23 @@ module mod_CPU (
 
 
     // ==== FETCH module START ====
+    wire fsm_busy_i;
+    wire [15:0] memory_address_i;
 
     mod_F mod_f(
-        .clk(clk),
+        .clk(clk), 
         .rst(rst),
-        .freeze(freeze_ID),
+        .freeze(freeze_ID | fsm_busy_d),
         .taken(taken_ID),
+        .i_valid(i_valid),
         .branch(branch_ID),
         .pc_in(pc_in_ID),
+        .mem_data_out(mem_data_out),
+        .fsm_busy_i(fsm_busy_i),
         .pc_curr(pc),  // current PC
         .pc_curr2(pc_out_IF), // current PC + 2
-        .instruction(instruction_IF)
+        .instruction(instruction_IF),
+        .memory_address_i(memory_address_i)
     );
     
     // ==== FETCH module END ====
@@ -122,9 +128,9 @@ module mod_CPU (
     IF_ID_pipe if_id_pipe(
         .clk(clk),
         .rst(rst),
-        .flush(taken_ID), // TODO: for branch not taken
+        .flush(taken_ID | fsm_busy_i), // TODO: for branch not taken
         .flag_en_ID(flag_en_ID),
-        .freeze(freeze_ID), // for stalls
+        .freeze(freeze_ID | fsm_busy_d), // for stalls
         .inst_i(instruction_IF), .inst_o(instruction_ID),
         .pc_i(pc_out_IF), .pc_o(pc_out_ID));
 
@@ -163,7 +169,6 @@ module mod_CPU (
         .taken(taken_ID)
     );
 
-
     assign fd_memwrite = memenable_ID & memwrite_ID;
     assign dx_memread = (memenable_EX & ~memwrite_EX);
 
@@ -195,6 +200,7 @@ module mod_CPU (
         .clk(clk),
         .rst(rst),
         .flush(nop_ID), // for stalls
+        .freeze(fsm_busy_d),
         .flag_en_ID(flag_en_ID),
         .flag_en_EX(flag_en_EX),
         .alusrc_i(alusrc_ID), .alusrc_o(alusrc_EX),
@@ -259,6 +265,7 @@ module mod_CPU (
     EX_MEM_pipe ex_mem_pipe(
         .clk(clk),
         .rst(rst),
+        .freeze(fsm_busy_d),
         .regwrite_i(regwrite_EX), .regwrite_o(regwrite_MEM),
         .memenable_i(memenable_EX), .memenable_o(memenable_MEM),
         .memwrite_i(memwrite_EX), .memwrite_o(memwrite_MEM),
@@ -273,17 +280,22 @@ module mod_CPU (
     // ==== EX/MEM Pipeline Register END ====
 
     // ==== MEMORY module START ====
-
+    wire [15:0] d_addr, d_data;
     mod_MEM mod_mem(
         .clk(clk),
         .rst(rst),
         .memenable(memenable_MEM),
         .memwrite(memwrite_MEM),
         .forward_mm(forward_mm),
+        .d_valid(d_valid),
         .memdata(SrcData2_MEM),
         .memdata_forward(DstData_WB),
         .addr(aluout_MEM),
-        .mem_out(mem));
+        .mem_data_out(mem_data_out),
+        .fsm_busy_d(fsm_busy_d),
+        .mem_out(mem),
+        .d_addr(d_addr),
+        .d_data(d_data));
     
     // ==== MEMORY module END ====
 
@@ -313,4 +325,19 @@ module mod_CPU (
     assign hlt = halt_WB;
 
     // ==== WB module END ====
+
+    // ==== ARBITRATION module ====
+    wire [15:0] mem_data_out;
+    wire d_valid;
+    wire i_valid;
+
+    // TODO only assert d_write if data already exists in cache
+    cache_to_mem dut_arbitration (
+        .clk(clk), .rst(rst), 
+        .d_enable(fsm_busy_d | (memwrite_MEM & ~fsm_busy_d)), .d_write((memwrite_MEM & ~fsm_busy_d)), .i_enable(fsm_busy_i), 
+        .d_addr(d_addr), .d_data(d_data), .i_addr(memory_address_i),
+        .d_valid(d_valid), .i_valid(i_valid),
+        .data_out(mem_data_out)
+    );
+
 endmodule

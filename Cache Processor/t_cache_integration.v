@@ -140,41 +140,57 @@ module t_cache_integration();
         insns_address_i = 16'h0000;
         insns_address_d = 16'h0000; insns_data_in_d = 16'h0000; insns_write_d = 1'b0;
         #40
-        enable_i = 1'b0; enable_d = 1'b0; rst = 1'b0; #20
-        #800; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        enable_i = 1'b0; enable_d = 1'b0; rst = 1'b0;
+        #40
 
         // I-cache read misses, no memory access
         enable_i = 1'b1;
         enable_d = 1'b0;
         insns_address_i = 16'h0000;
-        #640; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #660; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read hits, no memory access
         insns_address_i = 16'h0002;
-        #20; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #40; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read hits; D-cache memory miss
+        enable_d = 1'b1;
         insns_address_i = 16'h0004;
         insns_address_d = 16'h0010;
-        #640; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #660; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read hits; D-cache memory hits
         insns_address_i = 16'h0006;
         insns_address_d = 16'h0012;
-        #20; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #40; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read misses; D-cache memory hits
         insns_address_i = 16'h0040;
         insns_address_d = 16'h0014;
-        #640; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #660; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
         // I-cache read misses; D-cache memory miss
         insns_address_i = 16'h0080;
         insns_address_d = 16'h0040;
-        #640; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+        #1320; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
 
-        // TODO: test cases that exercises two ways of the same MBlock
-        
+        // I-cache read hit; D-cache memory hit
+        insns_address_i = 16'h0042;
+        insns_address_d = 16'h0016;
+        #40; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+
+        // I-cache read miss (write to 2nd way), no memory access
+        enable_d = 1'b0;
+        insns_address_i = 16'h1000;
+        #660; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+
+        // I-cache read hits (1st way is still where), no memory access
+        insns_address_i = 16'h0008;
+        #40; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
+
+        // I-cache read hits (2nd way is still where), no memory access
+        insns_address_i = 16'h1002;
+        #40; $display("insns_data_out_i: %h insns_data_out_d: %h", insns_data_out_i, insns_data_out_d);
         $stop;
         $finish;
     end

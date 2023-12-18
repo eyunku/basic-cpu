@@ -94,7 +94,7 @@ module t_cache_integration();
         .address(insns_address_d),
         .data_in(mem_data_d),
         .data_write(insns_data_in_d),
-        .load_addr(),
+        .load_addr(load_addr_d),
         .write(insns_write_d),
         .load_data(mem_data_valid_d),
         .load_tag(mem_tag_valid_d),

@@ -78,7 +78,7 @@ module i_cache (
   );
   
   // the actual data_arrs
-  assign word_offset = load_data ? set_onehot2 : set_onehot;
+  assign word_offset = load_data ? offset_onehot2 : offset_onehot;
   DataArray Dway1(
     .clk(clk),
     .rst(rst),
@@ -181,7 +181,7 @@ module d_cache (
 
   // the actual data_arrs
   assign data_load = (write & ~cache_miss) ? data_write : data_in;
-  assign word_offset = load_data ? set_onehot2 : set_onehot;
+  assign word_offset = load_data ? offset_onehot2 : offset_onehot;
   DataArray Dway1(
     .clk(clk),
     .rst(rst),

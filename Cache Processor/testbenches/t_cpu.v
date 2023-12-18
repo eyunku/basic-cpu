@@ -210,7 +210,7 @@ module cpu_ptb();
    assign DCacheReq = DUT.mod_mem.memenable;
    // Signal indicating a valid instruction data read or write request to cache
    
-   assign DCacheHit = ~(DUT.mod_mem.cache_d.cache_d);
+   assign DCacheHit = ~(DUT.mod_mem.cache_d.cache_miss);
    // Signal indicating a valid data cache hit
 
 

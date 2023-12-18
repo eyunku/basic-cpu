@@ -332,9 +332,6 @@ module cpu (
     // ==== WB module END ====
 
     // ==== ARBITRATION module ====
-    wire [15:0] mem_data_out;
-    wire d_valid;
-    wire i_valid;
 
     // TODO only assert d_write if data already exists in cache
     cache_to_mem dut_arbitration (

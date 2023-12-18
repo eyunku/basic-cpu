@@ -100,6 +100,11 @@ module cpu (
     wire [3:0] DstReg_WB;
     wire [15:0] aluout_WB, mem_WB, pc_WB;
 
+    // ==== ARBITRATION wires ====
+    wire [15:0] mem_data_out;
+    wire d_valid;
+    wire i_valid;
+
 
     // ==== FETCH module START ====
     wire fsm_busy_i;

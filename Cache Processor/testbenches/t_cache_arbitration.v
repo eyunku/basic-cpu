@@ -1,5 +1,5 @@
-`include "multicycle_memory.v"
-`include "cache_arbitration.v"
+`include "../multicycle_memory.v"
+`include "../cache_arbitration.v"
 
 module t_arbitration();
     reg clk, rst;

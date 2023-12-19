@@ -1,6 +1,6 @@
-`include "cache_controller.v"
-`include "dff.v" 
-`include "alu.v"
+`include "../cache_controller.v"
+`include "../dff.v" 
+`include "../alu.v"
 
 module t_cache_controller();
     reg clk, rst_n;

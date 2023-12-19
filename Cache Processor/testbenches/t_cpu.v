@@ -1,4 +1,4 @@
-`include "cpu.v"
+`include "../cpu.v"
 
 module cpu_ptb();
   
@@ -58,8 +58,8 @@ module cpu_ptb();
       DCacheReq_count = 0;
       ICacheReq_count = 0;
 
-      trace_file = $fopen("verilogsim.ptrace");
-      sim_log_file = $fopen("verilogsim.plog");
+      trace_file = $fopen("cpu-project/Cache Processor/testbenches/results/verilogsim.ptrace");
+      sim_log_file = $fopen("cpu-project/Cache Processor/testbenches/results/verilogsim.plog");
       
    end
 
